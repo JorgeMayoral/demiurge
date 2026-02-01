@@ -1,4 +1,4 @@
-use crate::config::{Config, Packages, System};
+use crate::config::{Config, PackagesConfig, SystemConfig};
 
 #[derive(Debug)]
 pub struct Changes {
@@ -33,7 +33,10 @@ pub struct SystemChanges {
 }
 
 impl SystemChanges {
-    pub fn new(new_system_config: System, applied_system_config: Option<System>) -> Self {
+    pub fn new(
+        new_system_config: SystemConfig,
+        applied_system_config: Option<SystemConfig>,
+    ) -> Self {
         match applied_system_config {
             Some(applied_system_config) => {
                 let hostname = if new_system_config.hostname() != applied_system_config.hostname() {
@@ -57,7 +60,10 @@ pub struct PackageChanges {
 }
 
 impl PackageChanges {
-    pub fn new(new_pkgs_config: Packages, applied_pkgs_config: Option<Packages>) -> Self {
+    pub fn new(
+        new_pkgs_config: PackagesConfig,
+        applied_pkgs_config: Option<PackagesConfig>,
+    ) -> Self {
         let new_pkgs = new_pkgs_config.pkgs();
         let applied_pkgs = applied_pkgs_config
             .map(|config| config.pkgs())

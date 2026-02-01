@@ -8,16 +8,16 @@ const CURRENT_CONFIG_FILE_NAME: &'static str = "current_config";
 
 #[derive(FromPyObject, Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    system: System,
-    packages: Packages,
+    system: SystemConfig,
+    packages: PackagesConfig,
 }
 
 impl Config {
-    pub fn system_config(&self) -> System {
+    pub fn system_config(&self) -> SystemConfig {
         self.system.clone()
     }
 
-    pub fn packages_config(&self) -> Packages {
+    pub fn packages_config(&self) -> PackagesConfig {
         self.packages.clone()
     }
 
@@ -49,23 +49,23 @@ impl Config {
 }
 
 #[derive(FromPyObject, Debug, Clone, Serialize, Deserialize)]
-pub struct System {
+pub struct SystemConfig {
     hostname: String,
 }
 
-impl System {
+impl SystemConfig {
     pub fn hostname(&self) -> String {
         self.hostname.clone()
     }
 }
 
 #[derive(FromPyObject, Debug, Clone, Default, Serialize, Deserialize)]
-pub struct Packages {
+pub struct PackagesConfig {
     pacman: Vec<String>,
     aur: Vec<String>,
 }
 
-impl Packages {
+impl PackagesConfig {
     pub fn pacman_pkgs(&self) -> Vec<String> {
         self.pacman.clone()
     }
