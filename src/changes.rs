@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::config::{Config, PackagesConfig, SystemConfig};
 
 #[derive(Debug)]
@@ -25,6 +27,15 @@ impl Changes {
             },
         }
     }
+
+    pub fn apply(&self) -> Result<()> {
+        log::info!("Applying system changes...");
+        self.system_changes.apply()?;
+        log::info!("Applying package changes...");
+        self.package_changes.apply()?;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
@@ -50,6 +61,22 @@ impl SystemChanges {
                 hostname: Some(new_system_config.hostname()),
             },
         }
+    }
+
+    pub fn apply(&self) -> Result<()> {
+        if let Some(hostname) = self.hostname.clone() {
+            let configured_hostname = hostname;
+            let current_hostname = duct::cmd!("hostname").read()?;
+
+            if configured_hostname != current_hostname {
+                log::info!("Changing hostname from {current_hostname} to {configured_hostname}");
+                duct::cmd!("sudo", "hostname", configured_hostname).run()?;
+            }
+        } else {
+            log::info!("Hostname already configured.")
+        }
+
+        Ok(())
     }
 }
 
@@ -84,5 +111,29 @@ impl PackageChanges {
             install: pkgs_to_install,
             remove: pkgs_to_remove,
         }
+    }
+
+    pub fn apply(&self) -> Result<()> {
+        if !self.install.is_empty() {
+            let pkgs_to_install = self.install.clone();
+            log::info!("Installing packages: {}", pkgs_to_install.join(" "));
+            let mut args = vec!["-S".to_owned()];
+            args.extend(pkgs_to_install);
+            duct::cmd("paru", args).run()?;
+        } else {
+            log::info!("No packages to install.")
+        }
+
+        if !self.remove.is_empty() {
+            let pkgs_to_remove = self.remove.clone();
+            log::info!("Removing packages: {}", pkgs_to_remove.join(" "));
+            let mut args = vec!["-Rs".to_owned()];
+            args.extend(pkgs_to_remove);
+            duct::cmd("paru", args).run()?;
+        } else {
+            log::info!("No packages to remove.")
+        }
+
+        Ok(())
     }
 }
