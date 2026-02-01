@@ -34,6 +34,12 @@ impl Cli {
                     duct::cmd!("sudo", "hostname", configured_hostname).run()?;
                 }
 
+                let pkgs_to_install = config.get_packages_config().get_configured_pkgs();
+                log::info!("Installing packages: {}", pkgs_to_install.join(" "));
+                let mut args = vec!["-S".to_owned()];
+                args.extend(pkgs_to_install);
+                duct::cmd("paru", args).run()?;
+
                 config.save_config().unwrap();
             }
         }

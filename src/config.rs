@@ -15,6 +15,10 @@ impl Config {
         self.system.clone()
     }
 
+    pub fn get_packages_config(&self) -> Packages {
+        self.packages.clone()
+    }
+
     pub fn save_config(self) -> Result<()> {
         let project_dir = directories::ProjectDirs::from("dev", "yorch", "demiurge").unwrap();
         let data_dir = project_dir.data_dir();
@@ -52,5 +56,11 @@ impl Packages {
 
     pub fn get_configured_aur_pkgs(&self) -> Vec<String> {
         self.aur.clone()
+    }
+
+    pub fn get_configured_pkgs(&self) -> Vec<String> {
+        let mut pkgs = self.pacman.clone();
+        pkgs.extend_from_slice(&self.aur);
+        pkgs
     }
 }
