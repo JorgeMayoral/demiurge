@@ -1,6 +1,8 @@
+use anyhow::Result;
 use clap::Parser;
 
-fn main() {
+fn main() -> Result<()> {
+    sudo::escalate_if_needed().unwrap();
     let cli = demigurge::cli::Cli::parse();
-    println!("{cli:?}");
+    cli.run()
 }
