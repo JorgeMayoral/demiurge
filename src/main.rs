@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 
 fn main() -> Result<()> {
-    sudo::escalate_if_needed().unwrap();
+    colog::init();
     let cli = demigurge::cli::Cli::parse();
     cli.run()
 }

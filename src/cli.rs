@@ -25,14 +25,16 @@ impl Cli {
             Command::Apply => {
                 let config = crate::engine::run().context("Error processing python config.")?;
                 let configured_hostname = config.get_system_config().get_configured_hostname();
-                println!("Configured hostname: {configured_hostname}");
-
-                let current_hostname = hostname::get()?.into_string().unwrap();
-                println!("Current hostname: {current_hostname}");
+                let current_hostname = duct::cmd!("hostname").read()?;
 
                 if configured_hostname != current_hostname {
-                    hostname::set(configured_hostname)?;
+                    log::info!(
+                        "Changing hostname from {current_hostname} to {configured_hostname}"
+                    );
+                    duct::cmd!("sudo", "hostname", configured_hostname).run()?;
                 }
+
+                config.save_config().unwrap();
             }
         }
 

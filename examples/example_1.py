@@ -2,4 +2,4 @@ from demiurge import Packages, System
 
 System.hostname("zenith")
 
-Packages.pacman("git", "curl")
+Packages.pacman("git", "curl", "hexyl")
