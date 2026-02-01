@@ -1,4 +1,7 @@
+use std::fmt::Display;
+
 use anyhow::Result;
+use owo_colors::OwoColorize;
 
 use crate::config::{Config, PackagesConfig, SystemConfig};
 
@@ -35,6 +38,49 @@ impl Changes {
         self.package_changes.apply()?;
 
         Ok(())
+    }
+}
+
+impl Display for Changes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let title = "CHANGES".green().bold().underline().to_string();
+
+        let system_title = "System".blue().bold().to_string();
+        let hostname_change = match self.system_changes.hostname.clone() {
+            Some(hostname) => hostname.green().to_string(),
+            None => "Unchanged".yellow().to_string(),
+        };
+
+        let packages_title = "Packages".blue().bold().to_string();
+
+        let mut packages_added = vec![];
+        if self.package_changes.install.is_empty() {
+            packages_added.push("No packages to install".yellow().to_string());
+        } else {
+            let add_symbol = "+".green().bold().to_string();
+            self.package_changes.install.iter().for_each(|pkg| {
+                let text = format!("[{add_symbol}] {pkg}");
+                packages_added.push(text);
+            });
+        };
+        let packages_added_text = packages_added.join("\n");
+
+        let mut packages_removed = vec![];
+        if self.package_changes.remove.is_empty() {
+            packages_removed.push("No packages to remove".yellow().to_string());
+        } else {
+            let remove_symbol = "-".red().bold().to_string();
+            self.package_changes.remove.iter().for_each(|pkg| {
+                let text = format!("[{remove_symbol}] {pkg}");
+                packages_removed.push(text);
+            });
+        };
+        let packages_removed_text = packages_removed.join("\n");
+
+        write!(
+            f,
+            "\n{title}\n{system_title}\nHostname: {hostname_change}\n\n{packages_title}\nInstall\n{packages_added_text}\n\nRemove\n{packages_removed_text}\n"
+        )
     }
 }
 

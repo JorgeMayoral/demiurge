@@ -1,20 +1,27 @@
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
 use crate::{changes::Changes, config::Config};
 
-#[derive(Debug, Parser)]
+#[derive(Debug, Parser, Clone, Copy)]
 pub struct Cli {
     #[command(subcommand)]
     command: Command,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Subcommand, Clone, Copy)]
 pub enum Command {
     /// Prints resulting Rust struct after evaluating Python config
     Eval,
     /// Applies the configuration
-    Apply,
+    Apply(ApplyArgs),
+}
+
+#[derive(Debug, Args, Clone, Copy)]
+pub struct ApplyArgs {
+    /// Show the list of changes that would be made without applying them.
+    #[arg(short, long)]
+    dry_run: bool,
 }
 
 impl Cli {
@@ -24,13 +31,16 @@ impl Cli {
                 let config = crate::engine::run().context("Error processing python config.")?;
                 println!("{config:#?}");
             }
-            Command::Apply => {
+            Command::Apply(args) => {
                 let config = crate::engine::run().context("Error processing python config.")?;
                 let applied_config = Config::read_saved_config();
                 let changes = Changes::new(config.clone(), applied_config);
-                log::debug!("Changes: {changes:#?}");
-                changes.apply()?;
-                config.save_config().unwrap();
+                if args.dry_run {
+                    println!("{changes}");
+                } else {
+                    changes.apply()?;
+                    config.save_config().unwrap();
+                }
             }
         }
 
