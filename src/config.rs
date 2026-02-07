@@ -1,26 +1,24 @@
-use std::{io::Write, path::PathBuf};
+use std::{collections::HashMap, io::Write, path::PathBuf};
 
-use anyhow::Result;
-use pyo3::FromPyObject;
+use anyhow::{Context, Result};
+use rustyscript::{Module, Runtime, RuntimeOptions};
 use serde::{Deserialize, Serialize};
 
-const CURRENT_CONFIG_FILE_NAME: &'static str = "current_config";
+const CURRENT_CONFIG_FILE_NAME: &str = "current_config";
 
-#[derive(FromPyObject, Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
-    system: SystemConfig,
-    packages: PackagesConfig,
-}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Demiurge(HashMap<String, DemiurgeConfig>);
 
-impl Config {
-    pub fn system_config(&self) -> SystemConfig {
-        self.system.clone()
+impl Demiurge {
+    /// # Errors
+    /// TODO
+    pub fn from_file(file: PathBuf) -> Result<Self> {
+        let module = Module::load(file)?;
+        Runtime::execute_module(&module, vec![], RuntimeOptions::default(), &())
+            .context("Failed to execute config module")
     }
 
-    pub fn packages_config(&self) -> PackagesConfig {
-        self.packages.clone()
-    }
-
+    #[must_use]
     pub fn read_saved_config() -> Option<Self> {
         let data_dir = Self::get_data_dir();
         if !data_dir.exists() {
@@ -31,15 +29,22 @@ impl Config {
         Some(applied_config_data)
     }
 
+    /// # Errors
+    /// TODO
     pub fn save_config(self) -> Result<()> {
         let data_dir = Self::get_data_dir();
-        std::fs::create_dir_all(&data_dir).unwrap();
+        std::fs::create_dir_all(&data_dir)?;
         log::info!("Saving applied configuration in {}", &data_dir.display());
         let mut current_config_file =
-            std::fs::File::create(data_dir.join(CURRENT_CONFIG_FILE_NAME)).unwrap();
-        let current_config_data = bitcode::serialize(&self).unwrap();
-        current_config_file.write(&current_config_data).unwrap();
+            std::fs::File::create(data_dir.join(CURRENT_CONFIG_FILE_NAME))?;
+        let current_config_data = bitcode::serialize(&self)?;
+        current_config_file.write_all(&current_config_data)?;
         Ok(())
+    }
+
+    #[must_use]
+    pub fn get(&self, name: &str) -> Option<DemiurgeConfig> {
+        self.0.get(name).cloned()
     }
 
     fn get_data_dir() -> PathBuf {
@@ -48,35 +53,49 @@ impl Config {
     }
 }
 
-#[derive(FromPyObject, Debug, Clone, Serialize, Deserialize)]
-pub struct SystemConfig {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DemiurgeConfig {
+    system: System,
+    packages: Packages,
+}
+
+impl DemiurgeConfig {
+    #[must_use]
+    pub fn system(&self) -> System {
+        self.system.clone()
+    }
+
+    #[must_use]
+    pub fn packages(&self) -> Packages {
+        self.packages.clone()
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct System {
     hostname: String,
 }
 
-impl SystemConfig {
+impl System {
+    #[must_use]
     pub fn hostname(&self) -> String {
         self.hostname.clone()
     }
 }
 
-#[derive(FromPyObject, Debug, Clone, Default, Serialize, Deserialize)]
-pub struct PackagesConfig {
-    pacman: Vec<String>,
-    aur: Vec<String>,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Packages {
+    paru: Vec<String>,
 }
 
-impl PackagesConfig {
-    pub fn pacman_pkgs(&self) -> Vec<String> {
-        self.pacman.clone()
+impl Packages {
+    #[must_use]
+    pub fn new(paru_pkgs: Vec<String>) -> Self {
+        Self { paru: paru_pkgs }
     }
 
-    pub fn aur_pkgs(&self) -> Vec<String> {
-        self.aur.clone()
-    }
-
-    pub fn pkgs(&self) -> Vec<String> {
-        let mut pkgs = self.pacman.clone();
-        pkgs.extend_from_slice(&self.aur);
-        pkgs
+    #[must_use]
+    pub fn paru(&self) -> Vec<String> {
+        self.paru.clone()
     }
 }

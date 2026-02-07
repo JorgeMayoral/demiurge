@@ -3,7 +3,7 @@ use std::fmt::Display;
 use anyhow::Result;
 use owo_colors::OwoColorize;
 
-use crate::config::{Config, PackagesConfig, SystemConfig};
+use crate::config::{DemiurgeConfig, Packages, System};
 
 #[derive(Debug)]
 pub struct Changes {
@@ -12,25 +12,28 @@ pub struct Changes {
 }
 
 impl Changes {
-    pub fn new(new_config: Config, applied_config: Option<Config>) -> Self {
+    #[must_use]
+    pub fn new(new_config: &DemiurgeConfig, applied_config: Option<DemiurgeConfig>) -> Self {
         match applied_config {
             Some(applied_config) => Self {
                 system_changes: SystemChanges::new(
-                    new_config.system_config(),
-                    Some(applied_config.system_config()),
+                    &new_config.system(),
+                    Some(applied_config.system()),
                 ),
                 package_changes: PackageChanges::new(
-                    new_config.packages_config(),
-                    Some(applied_config.packages_config()),
+                    &new_config.packages(),
+                    Some(applied_config.packages()),
                 ),
             },
             None => Self {
-                system_changes: SystemChanges::new(new_config.system_config(), None),
-                package_changes: PackageChanges::new(new_config.packages_config(), None),
+                system_changes: SystemChanges::new(&new_config.system(), None),
+                package_changes: PackageChanges::new(&new_config.packages(), None),
             },
         }
     }
 
+    /// # Errors
+    /// Return error if applying system or package changes fails
     pub fn apply(&self) -> Result<()> {
         log::info!("Applying system changes...");
         self.system_changes.apply()?;
@@ -54,27 +57,27 @@ impl Display for Changes {
         let packages_title = "Packages".blue().bold().to_string();
 
         let mut packages_added = vec![];
-        if self.package_changes.install.is_empty() {
+        if self.package_changes.install.paru().is_empty() {
             packages_added.push("No packages to install".yellow().to_string());
         } else {
             let add_symbol = "+".green().bold().to_string();
-            self.package_changes.install.iter().for_each(|pkg| {
+            self.package_changes.install.paru().iter().for_each(|pkg| {
                 let text = format!("[{add_symbol}] {pkg}");
                 packages_added.push(text);
             });
-        };
+        }
         let packages_added_text = packages_added.join("\n");
 
         let mut packages_removed = vec![];
-        if self.package_changes.remove.is_empty() {
+        if self.package_changes.remove.paru().is_empty() {
             packages_removed.push("No packages to remove".yellow().to_string());
         } else {
             let remove_symbol = "-".red().bold().to_string();
-            self.package_changes.remove.iter().for_each(|pkg| {
+            self.package_changes.remove.paru().iter().for_each(|pkg| {
                 let text = format!("[{remove_symbol}] {pkg}");
                 packages_removed.push(text);
             });
-        };
+        }
         let packages_removed_text = packages_removed.join("\n");
 
         write!(
@@ -90,16 +93,14 @@ pub struct SystemChanges {
 }
 
 impl SystemChanges {
-    pub fn new(
-        new_system_config: SystemConfig,
-        applied_system_config: Option<SystemConfig>,
-    ) -> Self {
+    #[must_use]
+    pub fn new(new_system_config: &System, applied_system_config: Option<System>) -> Self {
         match applied_system_config {
             Some(applied_system_config) => {
-                let hostname = if new_system_config.hostname() != applied_system_config.hostname() {
-                    Some(new_system_config.hostname())
-                } else {
+                let hostname = if new_system_config.hostname() == applied_system_config.hostname() {
                     None
+                } else {
+                    Some(new_system_config.hostname())
                 };
                 Self { hostname }
             }
@@ -109,6 +110,8 @@ impl SystemChanges {
         }
     }
 
+    /// # Errors
+    /// Returns error if `hostname` or `sudo hostname {name}` fail.
     pub fn apply(&self) -> Result<()> {
         if let Some(hostname) = self.hostname.clone() {
             let configured_hostname = hostname;
@@ -119,7 +122,7 @@ impl SystemChanges {
                 duct::cmd!("sudo", "hostname", configured_hostname).run()?;
             }
         } else {
-            log::info!("Hostname already configured.")
+            log::info!("Hostname already configured.");
         }
 
         Ok(())
@@ -128,56 +131,56 @@ impl SystemChanges {
 
 #[derive(Debug)]
 pub struct PackageChanges {
-    install: Vec<String>,
-    remove: Vec<String>,
+    install: Packages,
+    remove: Packages,
 }
 
 impl PackageChanges {
-    pub fn new(
-        new_pkgs_config: PackagesConfig,
-        applied_pkgs_config: Option<PackagesConfig>,
-    ) -> Self {
-        let new_pkgs = new_pkgs_config.pkgs();
-        let applied_pkgs = applied_pkgs_config
-            .map(|config| config.pkgs())
+    #[must_use]
+    pub fn new(new_pkgs_config: &Packages, applied_pkgs_config: Option<Packages>) -> Self {
+        let new_paru_pkgs = new_pkgs_config.paru();
+        let applied_paru_pkgs = applied_pkgs_config
+            .map(|config| config.paru())
             .unwrap_or_default();
 
-        let pkgs_to_install: Vec<String> = new_pkgs
+        let pkgs_to_install: Vec<String> = new_paru_pkgs
             .iter()
-            .filter(|pkg| !applied_pkgs.contains(pkg))
-            .map(|pkg| pkg.to_owned())
+            .filter(|pkg| !applied_paru_pkgs.contains(pkg))
+            .map(ToOwned::to_owned)
             .collect();
-        let pkgs_to_remove: Vec<String> = applied_pkgs
+        let pkgs_to_remove: Vec<String> = applied_paru_pkgs
             .iter()
-            .filter(|pkg| !new_pkgs.contains(pkg))
-            .map(|pkg| pkg.to_owned())
+            .filter(|pkg| !new_paru_pkgs.contains(pkg))
+            .map(ToOwned::to_owned)
             .collect();
 
         Self {
-            install: pkgs_to_install,
-            remove: pkgs_to_remove,
+            install: Packages::new(pkgs_to_install),
+            remove: Packages::new(pkgs_to_remove),
         }
     }
 
+    /// # Errors
+    /// Return error if `paru` command fails
     pub fn apply(&self) -> Result<()> {
-        if !self.install.is_empty() {
-            let pkgs_to_install = self.install.clone();
-            log::info!("Installing packages: {}", pkgs_to_install.join(" "));
-            let mut args = vec!["-S".to_owned()];
-            args.extend(pkgs_to_install);
-            duct::cmd("paru", args).run()?;
+        if self.install.paru().is_empty() {
+            log::info!("No packages to install.");
         } else {
-            log::info!("No packages to install.")
+            let pkgs_to_install = self.install.clone();
+            log::info!("Installing packages: {}", pkgs_to_install.paru().join(" "));
+            let mut args = vec!["-S".to_owned()];
+            args.extend(pkgs_to_install.paru());
+            duct::cmd("paru", args).run()?;
         }
 
-        if !self.remove.is_empty() {
-            let pkgs_to_remove = self.remove.clone();
-            log::info!("Removing packages: {}", pkgs_to_remove.join(" "));
-            let mut args = vec!["-Rs".to_owned()];
-            args.extend(pkgs_to_remove);
-            duct::cmd("paru", args).run()?;
+        if self.remove.paru().is_empty() {
+            log::info!("No packages to remove.");
         } else {
-            log::info!("No packages to remove.")
+            let pkgs_to_remove = self.remove.clone();
+            log::info!("Removing packages: {}", pkgs_to_remove.paru().join(" "));
+            let mut args = vec!["-Rs".to_owned()];
+            args.extend(pkgs_to_remove.paru());
+            duct::cmd("paru", args).run()?;
         }
 
         Ok(())
