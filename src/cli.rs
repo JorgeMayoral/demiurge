@@ -5,6 +5,8 @@ use clap::{Args, Parser, Subcommand};
 
 use crate::{changes::Changes, config::Demiurge};
 
+mod init;
+
 #[derive(Debug, Parser, Clone)]
 pub struct Cli {
     #[command(subcommand)]
@@ -17,6 +19,8 @@ pub enum Command {
     Eval(EvalArgs),
     /// Applies the configuration
     Apply(ApplyArgs),
+    /// Creates the initial configuration files
+    Init,
 }
 
 #[derive(Debug, Args, Clone)]
@@ -63,6 +67,10 @@ impl Cli {
                     changes.apply()?;
                     configs.save_config()?;
                 }
+            }
+            Command::Init => {
+                let cwd = std::env::current_dir()?;
+                init::initialize_config(&cwd)?;
             }
         }
 
