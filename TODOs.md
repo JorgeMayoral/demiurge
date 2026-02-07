@@ -1,0 +1,4 @@
+- [ ] Add option to overwrite init files
+- [ ] Add command for updating .d.ts file (for new versions)
+- [ ] Export config evaluation to json, yaml...
+- [ ] Add dotfiles symlink feature
