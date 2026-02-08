@@ -29,7 +29,7 @@ impl Changes {
                 ),
                 dotfile: DotfileChanges::new(
                     &new_config.dotfiles(),
-                    Some(new_config.dotfiles().clone()),
+                    Some(applied_config.dotfiles().clone()),
                 ),
             },
             None => Self {
