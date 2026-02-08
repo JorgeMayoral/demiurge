@@ -19,24 +19,14 @@ pub struct Changes {
 
 impl Changes {
     #[must_use]
-    pub fn new(new_config: &DemiurgeConfig, applied_config: Option<DemiurgeConfig>) -> Self {
-        match applied_config {
-            Some(applied_config) => Self {
-                system: SystemChanges::new(&new_config.system(), Some(applied_config.system())),
-                package: PackageChanges::new(
-                    &new_config.packages(),
-                    Some(applied_config.packages()),
-                ),
-                dotfile: DotfileChanges::new(
-                    &new_config.dotfiles(),
-                    Some(applied_config.dotfiles().clone()),
-                ),
-            },
-            None => Self {
-                system: SystemChanges::new(&new_config.system(), None),
-                package: PackageChanges::new(&new_config.packages(), None),
-                dotfile: DotfileChanges::new(&new_config.dotfiles(), None),
-            },
+    pub fn new(new_config: &DemiurgeConfig, applied_config: &DemiurgeConfig) -> Self {
+        Self {
+            system: SystemChanges::new(&new_config.system(), Some(applied_config.system())),
+            package: PackageChanges::new(&new_config.packages(), Some(applied_config.packages())),
+            dotfile: DotfileChanges::new(
+                &new_config.dotfiles(),
+                Some(applied_config.dotfiles().clone()),
+            ),
         }
     }
 

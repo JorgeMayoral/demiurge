@@ -17,7 +17,6 @@ impl DotfileChanges {
         applied_dotfiles_config: Option<Vec<Dotfile>>,
     ) -> Self {
         let applied_dotfiles = applied_dotfiles_config.unwrap_or_default();
-        println!("{applied_dotfiles:#?}");
 
         let symlinks_to_create = new_dotfiles_config
             .iter()

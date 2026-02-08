@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
 
-use crate::{changes::Changes, config::Demiurge};
+use crate::{
+    changes::Changes,
+    config::{Demiurge, DemiurgeConfig},
+};
 
 mod init;
 
@@ -61,14 +64,13 @@ impl Cli {
                     "Configuration \"{}\" not found",
                     args.clone().name.clone()
                 ))?;
-                let saved_configs = Demiurge::read_saved_config();
-                let applied_config = saved_configs.and_then(|c| c.get(&args.name));
-                let changes = Changes::new(&config, applied_config);
+                let applied_config = DemiurgeConfig::read_applied_config();
+                let changes = Changes::new(&config, &applied_config);
                 if args.dry_run {
                     println!("{changes}");
                 } else {
                     changes.apply(args.overwrite_symlink)?;
-                    configs.save_config()?;
+                    config.save_applied_config()?;
                 }
             }
             Command::Init => {

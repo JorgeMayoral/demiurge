@@ -1,9 +1,41 @@
-use std::path::PathBuf;
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::utils;
+
+const CURRENT_DOTFILES_CONFIG_FILE_NAME: &str = "current_dotfiles_config";
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct Dotfiles(Vec<Dotfile>);
+
+impl Dotfiles {
+    #[must_use]
+    pub fn dotfiles(&self) -> Vec<Dotfile> {
+        self.0.clone()
+    }
+
+    #[must_use]
+    pub fn read_applied_config(data_path: &Path) -> Option<Self> {
+        let data = std::fs::read(data_path.join(CURRENT_DOTFILES_CONFIG_FILE_NAME)).ok()?;
+        let applied_config_data = bitcode::deserialize(&data).ok()?;
+        Some(applied_config_data)
+    }
+
+    /// # Errors
+    /// TODO
+    pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
+        let mut current_config_file =
+            std::fs::File::create(data_path.join(CURRENT_DOTFILES_CONFIG_FILE_NAME))?;
+        let current_config_data = bitcode::serialize(&self)?;
+        current_config_file.write_all(&current_config_data)?;
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Dotfile {
