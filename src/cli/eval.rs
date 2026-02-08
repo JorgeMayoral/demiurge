@@ -11,8 +11,11 @@ pub struct EvalArgs {
     #[arg(short, long)]
     file: PathBuf,
     /// Prints the evaluated config in json format
-    #[arg(long)]
+    #[arg(long, conflicts_with = "yaml")]
     json: bool,
+    /// Prints the evaluated config in yaml format
+    #[arg(long)]
+    yaml: bool,
 }
 
 impl EvalArgs {
@@ -22,6 +25,9 @@ impl EvalArgs {
             let json_value = serde_json::to_value(config)?;
             let json_string = json_value.to_string();
             println!("{json_string}");
+        } else if self.yaml {
+            let yaml_string = serde_norway::to_string(&config)?;
+            println!("{yaml_string}");
         } else {
             println!("{config:#?}");
         }
