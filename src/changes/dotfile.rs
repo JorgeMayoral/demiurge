@@ -2,45 +2,44 @@ use std::fmt::Display;
 
 use owo_colors::OwoColorize;
 
-use crate::config::Dotfile;
+use crate::config::{Dotfile, Dotfiles};
 
 #[derive(Debug, Clone)]
 pub struct DotfileChanges {
-    create: Vec<Dotfile>,
-    remove: Vec<Dotfile>,
+    pub create: Dotfiles,
+    pub remove: Dotfiles,
 }
 
 impl DotfileChanges {
     #[must_use]
-    pub fn new(
-        new_dotfiles_config: &[Dotfile],
-        applied_dotfiles_config: Option<Vec<Dotfile>>,
-    ) -> Self {
-        let applied_dotfiles = applied_dotfiles_config.unwrap_or_default();
-
-        let symlinks_to_create = new_dotfiles_config
+    pub fn new(new_dotfiles_config: &Dotfiles, applied_dotfiles_config: &Dotfiles) -> Self {
+        let symlinks_to_create: Vec<Dotfile> = new_dotfiles_config
+            .dotfiles()
             .iter()
-            .filter(|dot| !applied_dotfiles.contains(dot))
+            .filter(|dot| !applied_dotfiles_config.dotfiles().contains(dot))
             .map(ToOwned::to_owned)
             .collect();
-        let symlinks_to_remove = applied_dotfiles
+        let symlinks_to_remove: Vec<Dotfile> = applied_dotfiles_config
+            .dotfiles()
             .iter()
-            .filter(|dot| !new_dotfiles_config.contains(dot))
+            .filter(|dot| !new_dotfiles_config.dotfiles().contains(dot))
             .map(ToOwned::to_owned)
             .collect();
 
         Self {
-            create: symlinks_to_create,
-            remove: symlinks_to_remove,
+            create: Dotfiles::new(symlinks_to_create),
+            remove: Dotfiles::new(symlinks_to_remove),
         }
     }
 
     pub fn apply(&self, overwrite: bool) {
         self.create
+            .dotfiles()
             .iter()
             .for_each(|dotfile| dotfile.create_symlink(overwrite).unwrap());
 
         self.remove
+            .dotfiles()
             .iter()
             .for_each(|dotfile| dotfile.remove_symlink().unwrap());
     }
@@ -51,6 +50,7 @@ impl Display for DotfileChanges {
         let title = "Dotfile symlinks".blue().bold().to_string();
         let symlinks_to_create = self
             .create
+            .dotfiles()
             .iter()
             .map(|dotfile| {
                 let symbol = "+".green().to_string();
@@ -70,6 +70,7 @@ impl Display for DotfileChanges {
 
         let symlinks_to_remove = self
             .remove
+            .dotfiles()
             .iter()
             .map(|dotfile| {
                 let symbol = "-".red().to_string();

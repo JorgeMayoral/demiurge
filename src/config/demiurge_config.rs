@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{Dotfile, Packages, System, dotfile::Dotfiles};
+use crate::config::{Dotfiles, Packages, System};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct DemiurgeConfig {
@@ -24,8 +24,8 @@ impl DemiurgeConfig {
     }
 
     #[must_use]
-    pub fn dotfiles(&self) -> Vec<Dotfile> {
-        self.dotfiles.dotfiles()
+    pub fn dotfiles(&self) -> Dotfiles {
+        self.dotfiles.clone()
     }
 
     #[must_use]

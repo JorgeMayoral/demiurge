@@ -15,6 +15,11 @@ pub struct Dotfiles(Vec<Dotfile>);
 
 impl Dotfiles {
     #[must_use]
+    pub fn new(dotfiles: Vec<Dotfile>) -> Self {
+        Self(dotfiles)
+    }
+
+    #[must_use]
     pub fn dotfiles(&self) -> Vec<Dotfile> {
         self.0.clone()
     }
