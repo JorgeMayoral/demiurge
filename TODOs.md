@@ -2,4 +2,4 @@
 - [ ] Add command for updating .d.ts file (for new versions)
 - [ ] Export config evaluation to json, yaml...
 - [x] Add dotfiles symlink feature
-- [ ] Split applied changes file into multiple ones. That could allow easier evolution. When the schema changes not all of the file turns invalid, only the changed ones, unchanged parts could be still used to avoid unnecessary work.
+- [x] Split applied changes file into multiple ones. That could allow easier evolution. When the schema changes not all of the file turns invalid, only the changed ones, unchanged parts could be still used to avoid unnecessary work.
