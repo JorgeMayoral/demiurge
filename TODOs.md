@@ -1,5 +1,10 @@
+- [ ] Generate json schema using `schemars`
+- [ ] Allow apply config from json and yaml (maybe with --stdin option)
+- [ ] Allow package with custom install (for `curl https://... | sh` packages)
+- [ ] Start working for more complex options like docker
+- [ ] Study final report and applied config only with successful tasks (not fail with first error)
 - [ ] Add option to overwrite init files
 - [ ] Add command for updating .d.ts file (for new versions)
-- [ ] Export config evaluation to json, yaml...
+- [x] Export config evaluation to json, yaml...
 - [x] Add dotfiles symlink feature
 - [x] Split applied changes file into multiple ones. That could allow easier evolution. When the schema changes not all of the file turns invalid, only the changed ones, unchanged parts could be still used to avoid unnecessary work.
