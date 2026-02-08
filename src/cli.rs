@@ -29,7 +29,7 @@ impl Cli {
     pub fn run(&self) -> Result<()> {
         match self.command.clone() {
             Command::Eval(args) => {
-                args.run();
+                args.run()?;
             }
             Command::Apply(args) => {
                 args.run()?;

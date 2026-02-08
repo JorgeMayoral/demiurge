@@ -708,6 +708,7 @@ dependencies = [
  "pretty_env_logger",
  "rustyscript",
  "serde",
+ "serde_json",
  "walkdir",
 ]
 
