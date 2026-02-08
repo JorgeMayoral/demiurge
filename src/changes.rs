@@ -3,12 +3,18 @@ use std::fmt::Display;
 use anyhow::Result;
 use owo_colors::OwoColorize;
 
-use crate::config::{DemiurgeConfig, Packages, System};
+use crate::{
+    changes::dotfile::DotfileChanges,
+    config::{DemiurgeConfig, Packages, System},
+};
+
+mod dotfile;
 
 #[derive(Debug)]
 pub struct Changes {
-    system_changes: SystemChanges,
-    package_changes: PackageChanges,
+    system: SystemChanges,
+    package: PackageChanges,
+    dotfile: DotfileChanges,
 }
 
 impl Changes {
@@ -16,29 +22,33 @@ impl Changes {
     pub fn new(new_config: &DemiurgeConfig, applied_config: Option<DemiurgeConfig>) -> Self {
         match applied_config {
             Some(applied_config) => Self {
-                system_changes: SystemChanges::new(
-                    &new_config.system(),
-                    Some(applied_config.system()),
-                ),
-                package_changes: PackageChanges::new(
+                system: SystemChanges::new(&new_config.system(), Some(applied_config.system())),
+                package: PackageChanges::new(
                     &new_config.packages(),
                     Some(applied_config.packages()),
                 ),
+                dotfile: DotfileChanges::new(
+                    &new_config.dotfiles(),
+                    Some(new_config.dotfiles().clone()),
+                ),
             },
             None => Self {
-                system_changes: SystemChanges::new(&new_config.system(), None),
-                package_changes: PackageChanges::new(&new_config.packages(), None),
+                system: SystemChanges::new(&new_config.system(), None),
+                package: PackageChanges::new(&new_config.packages(), None),
+                dotfile: DotfileChanges::new(&new_config.dotfiles(), None),
             },
         }
     }
 
     /// # Errors
     /// Return error if applying system or package changes fails
-    pub fn apply(&self) -> Result<()> {
+    pub fn apply(&self, overwrite_symlinks: bool) -> Result<()> {
         log::info!("Applying system changes...");
-        self.system_changes.apply()?;
+        self.system.apply()?;
         log::info!("Applying package changes...");
-        self.package_changes.apply()?;
+        self.package.apply()?;
+        log::info!("Applying dotfiles changes...");
+        self.dotfile.apply(overwrite_symlinks);
 
         Ok(())
     }
@@ -49,7 +59,7 @@ impl Display for Changes {
         let title = "CHANGES".green().bold().underline().to_string();
 
         let system_title = "System".blue().bold().to_string();
-        let hostname_change = match self.system_changes.hostname.clone() {
+        let hostname_change = match self.system.hostname.clone() {
             Some(hostname) => hostname.green().to_string(),
             None => "Unchanged".yellow().to_string(),
         };
@@ -57,11 +67,11 @@ impl Display for Changes {
         let packages_title = "Packages".blue().bold().to_string();
 
         let mut packages_added = vec![];
-        if self.package_changes.install.paru().is_empty() {
+        if self.package.install.paru().is_empty() {
             packages_added.push("No packages to install".yellow().to_string());
         } else {
             let add_symbol = "+".green().bold().to_string();
-            self.package_changes.install.paru().iter().for_each(|pkg| {
+            self.package.install.paru().iter().for_each(|pkg| {
                 let text = format!("[{add_symbol}] {pkg}");
                 packages_added.push(text);
             });
@@ -69,20 +79,22 @@ impl Display for Changes {
         let packages_added_text = packages_added.join("\n");
 
         let mut packages_removed = vec![];
-        if self.package_changes.remove.paru().is_empty() {
+        if self.package.remove.paru().is_empty() {
             packages_removed.push("No packages to remove".yellow().to_string());
         } else {
             let remove_symbol = "-".red().bold().to_string();
-            self.package_changes.remove.paru().iter().for_each(|pkg| {
+            self.package.remove.paru().iter().for_each(|pkg| {
                 let text = format!("[{remove_symbol}] {pkg}");
                 packages_removed.push(text);
             });
         }
         let packages_removed_text = packages_removed.join("\n");
 
+        let dotfile_changes = self.dotfile.clone();
+
         write!(
             f,
-            "\n{title}\n{system_title}\nHostname: {hostname_change}\n\n{packages_title}\nInstall\n{packages_added_text}\n\nRemove\n{packages_removed_text}\n"
+            "\n{title}\n{system_title}\nHostname: {hostname_change}\n\n{packages_title}\n{packages_added_text}\n\n{packages_removed_text}\n\n{dotfile_changes}\n"
         )
     }
 }

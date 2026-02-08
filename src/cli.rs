@@ -41,6 +41,9 @@ pub struct ApplyArgs {
     /// Name of the configuration to apply
     #[arg(short, long)]
     name: String,
+    /// Allows overwriting already existing dotfile symlinks
+    #[arg(long)]
+    overwrite_symlink: bool,
 }
 
 impl Cli {
@@ -64,7 +67,7 @@ impl Cli {
                 if args.dry_run {
                     println!("{changes}");
                 } else {
-                    changes.apply()?;
+                    changes.apply(args.overwrite_symlink)?;
                     configs.save_config()?;
                 }
             }

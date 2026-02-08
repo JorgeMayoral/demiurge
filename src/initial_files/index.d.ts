@@ -11,9 +11,15 @@ declare global {
     paru: Pkgs;
   }
 
+  interface Dotfile {
+    source: string;
+    target: string;
+  }
+
   interface DemiurgeConfig {
     system: System;
     packages: Packages;
+    dotfiles: Dotfile[];
   }
 
   type Demiurge = { [key: string]: DemiurgeConfig };

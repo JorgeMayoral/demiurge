@@ -4,6 +4,10 @@ use anyhow::{Context, Result};
 use rustyscript::{Module, Runtime, RuntimeOptions};
 use serde::{Deserialize, Serialize};
 
+pub use crate::config::dotfile::Dotfile;
+
+mod dotfile;
+
 const CURRENT_CONFIG_FILE_NAME: &str = "current_config";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -57,6 +61,7 @@ impl Demiurge {
 pub struct DemiurgeConfig {
     system: System,
     packages: Packages,
+    dotfiles: Vec<Dotfile>,
 }
 
 impl DemiurgeConfig {
@@ -68,6 +73,11 @@ impl DemiurgeConfig {
     #[must_use]
     pub fn packages(&self) -> Packages {
         self.packages.clone()
+    }
+
+    #[must_use]
+    pub fn dotfiles(&self) -> Vec<Dotfile> {
+        self.dotfiles.clone()
     }
 }
 
