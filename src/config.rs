@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::{Context, Result};
 use rustyscript::{Module, Runtime, RuntimeOptions};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub use crate::config::demiurge_config::DemiurgeConfig;
@@ -14,7 +15,7 @@ mod dotfile;
 mod packages;
 mod system;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct Demiurge(HashMap<String, DemiurgeConfig>);
 
 impl Demiurge {

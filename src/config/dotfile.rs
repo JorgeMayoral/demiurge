@@ -4,13 +4,14 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::utils;
 
 const CURRENT_DOTFILES_CONFIG_FILE_NAME: &str = "current_dotfiles_config";
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct Dotfiles(Vec<Dotfile>);
 
 impl Dotfiles {
@@ -42,7 +43,7 @@ impl Dotfiles {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub struct Dotfile {
     source: PathBuf,
     target: PathBuf,

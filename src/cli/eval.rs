@@ -22,8 +22,7 @@ impl EvalArgs {
     pub fn run(self) -> Result<()> {
         let config = Demiurge::from_file(self.file)?;
         if self.json {
-            let json_value = serde_json::to_value(config)?;
-            let json_string = json_value.to_string();
+            let json_string = serde_json::to_string_pretty(&config)?;
             println!("{json_string}");
         } else if self.yaml {
             let yaml_string = serde_norway::to_string(&config)?;

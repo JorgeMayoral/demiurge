@@ -1,11 +1,12 @@
 use std::{io::Write, path::Path};
 
 use anyhow::Result;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 const CURRENT_PACKAGES_CONFIG_FILE_NAME: &str = "current_packages_config";
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct Packages {
     paru: Vec<String>,
 }

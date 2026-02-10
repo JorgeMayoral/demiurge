@@ -1,11 +1,12 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{Dotfiles, Packages, System};
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct DemiurgeConfig {
     system: System,
     packages: Packages,

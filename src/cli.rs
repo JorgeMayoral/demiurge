@@ -1,11 +1,12 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::cli::{apply::ApplyArgs, eval::EvalArgs, init::InitArgs};
+use crate::cli::{apply::ApplyArgs, eval::EvalArgs, init::InitArgs, schema::SchemaArgs};
 
 mod apply;
 mod eval;
 mod init;
+mod schema;
 
 #[derive(Debug, Parser, Clone)]
 #[command(version, about, author)]
@@ -22,6 +23,8 @@ pub enum Command {
     Apply(ApplyArgs),
     /// Creates the initial configuration files
     Init(InitArgs),
+    /// Prints the JSON schema of the Demiurge configuration object
+    Schema(SchemaArgs),
 }
 
 impl Cli {
@@ -36,6 +39,9 @@ impl Cli {
                 args.run()?;
             }
             Command::Init(args) => {
+                args.run()?;
+            }
+            Command::Schema(args) => {
                 args.run()?;
             }
         }
