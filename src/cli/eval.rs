@@ -7,7 +7,7 @@ use crate::config::Demiurge;
 
 #[derive(Debug, Args, Clone)]
 pub struct EvalArgs {
-    /// The path to the python file containing the configuration
+    /// The path to the typescript file containing the configuration
     #[arg(short, long)]
     file: PathBuf,
     /// Prints the evaluated config in json format

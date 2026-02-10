@@ -8,6 +8,7 @@ mod eval;
 mod init;
 
 #[derive(Debug, Parser, Clone)]
+#[command(version, about, author)]
 pub struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -15,7 +16,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand, Clone)]
 pub enum Command {
-    /// Prints resulting Rust struct after evaluating Python config
+    /// Prints resulting Rust struct after evaluating Typescript config
     Eval(EvalArgs),
     /// Applies the configuration
     Apply(ApplyArgs),
