@@ -5,6 +5,8 @@ const config: DemiurgeConfig = {
   packages: {
     paru: ["git", "curl"],
   },
+  dotfiles: [],
+  services: [],
 };
 
 export default (): Demiurge => ({

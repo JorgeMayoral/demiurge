@@ -4,13 +4,14 @@ use anyhow::Result;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{Dotfiles, Packages, System};
+use crate::config::{Dotfiles, Packages, Services, System};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct DemiurgeConfig {
     system: System,
     packages: Packages,
     dotfiles: Dotfiles,
+    services: Services,
 }
 
 impl DemiurgeConfig {
@@ -30,15 +31,22 @@ impl DemiurgeConfig {
     }
 
     #[must_use]
+    pub fn services(&self) -> Services {
+        self.services.clone()
+    }
+
+    #[must_use]
     pub fn read_applied_config() -> Self {
         let data_path = Self::get_data_dir();
         let applied_system_config = System::read_applied_config(&data_path).unwrap_or_default();
         let applied_packages_config = Packages::read_applied_config(&data_path).unwrap_or_default();
         let applied_dotfiles_config = Dotfiles::read_applied_config(&data_path).unwrap_or_default();
+        let applied_services_config = Services::read_applied_config(&data_path).unwrap_or_default();
         Self {
             system: applied_system_config,
             packages: applied_packages_config,
             dotfiles: applied_dotfiles_config,
+            services: applied_services_config,
         }
     }
 
@@ -51,6 +59,7 @@ impl DemiurgeConfig {
         self.system.save_applied_config(&data_path)?;
         self.packages.save_applied_config(&data_path)?;
         self.dotfiles.save_applied_config(&data_path)?;
+        self.services.save_applied_config(&data_path)?;
         Ok(())
     }
 

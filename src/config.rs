@@ -8,11 +8,13 @@ use serde::{Deserialize, Serialize};
 pub use crate::config::demiurge_config::DemiurgeConfig;
 pub use crate::config::dotfile::{Dotfile, Dotfiles};
 pub use crate::config::packages::Packages;
+pub use crate::config::service::{Service, Services};
 pub use crate::config::system::System;
 
 mod demiurge_config;
 mod dotfile;
 mod packages;
+mod service;
 mod system;
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
