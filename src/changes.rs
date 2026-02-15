@@ -6,7 +6,7 @@ use owo_colors::OwoColorize;
 use crate::{
     changes::{
         dotfile::DotfileChanges, package::PackageChanges, service::ServiceChanges,
-        system::SystemChanges,
+        system::SystemChanges, user::UsersChanges,
     },
     config::DemiurgeConfig,
 };
@@ -15,6 +15,7 @@ mod dotfile;
 mod package;
 mod service;
 mod system;
+mod user;
 
 #[derive(Debug)]
 pub struct Changes {
@@ -22,6 +23,7 @@ pub struct Changes {
     package: PackageChanges,
     dotfile: DotfileChanges,
     service: ServiceChanges,
+    user: UsersChanges,
 }
 
 impl Changes {
@@ -32,6 +34,7 @@ impl Changes {
             package: PackageChanges::new(&new_config.packages(), &applied_config.packages()),
             dotfile: DotfileChanges::new(&new_config.dotfiles(), &applied_config.dotfiles()),
             service: ServiceChanges::new(&new_config.services(), &applied_config.services()),
+            user: UsersChanges::new(&new_config.users(), &applied_config.users()),
         }
     }
 
@@ -46,6 +49,8 @@ impl Changes {
         self.dotfile.apply(overwrite_symlinks);
         log::info!("Applying service changes...");
         self.service.apply();
+        log::info!("Applying users changes...");
+        self.user.apply();
 
         Ok(())
     }
@@ -59,10 +64,11 @@ impl Display for Changes {
         let package_changes = &self.package;
         let dotfile_changes = &self.dotfile;
         let service_changes = &self.service;
+        let user_changes = &self.user;
 
         write!(
             f,
-            "\n{title}\n{system_changes}\n\n{package_changes}\n\n{dotfile_changes}\n\n{service_changes}\n"
+            "\n{title}\n{system_changes}\n\n{package_changes}\n\n{dotfile_changes}\n\n{service_changes}\n\n{user_changes}\n"
         )
     }
 }

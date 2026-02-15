@@ -10,12 +10,14 @@ pub use crate::config::dotfile::{Dotfile, Dotfiles};
 pub use crate::config::packages::Packages;
 pub use crate::config::service::{Service, Services};
 pub use crate::config::system::System;
+pub use crate::config::user::{User, Users};
 
 mod demiurge_config;
 mod dotfile;
 mod packages;
 mod service;
 mod system;
+mod user;
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct Demiurge(HashMap<String, DemiurgeConfig>);
