@@ -11,7 +11,6 @@ pub struct DotfileChanges {
 }
 
 impl DotfileChanges {
-    #[must_use]
     pub fn new(new_dotfiles_config: &Dotfiles, applied_dotfiles_config: &Dotfiles) -> Self {
         let symlinks_to_create: Vec<Dotfile> = new_dotfiles_config
             .dotfiles()

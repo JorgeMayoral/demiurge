@@ -28,8 +28,6 @@ pub enum Command {
 }
 
 impl Cli {
-    /// # Errors
-    /// TODO
     pub fn run(&self) -> Result<()> {
         match self.command.clone() {
             Command::Eval(args) => {

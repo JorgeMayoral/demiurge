@@ -8,7 +8,6 @@ use crate::config::{User, Users};
 pub struct UsersChanges(Vec<UserChanges>);
 
 impl UsersChanges {
-    #[must_use]
     pub fn new(new_users_config: &Users, applied_users_config: &Users) -> Self {
         let users_changes = new_users_config
             .users()
@@ -38,7 +37,6 @@ pub struct UserChanges {
 }
 
 impl UserChanges {
-    #[must_use]
     pub fn new(new_user_config: &User, applied_user_config: &User) -> Self {
         let groups_to_add: Vec<String> = new_user_config
             .groups()

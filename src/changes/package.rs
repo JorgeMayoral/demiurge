@@ -12,7 +12,6 @@ pub struct PackageChanges {
 }
 
 impl PackageChanges {
-    #[must_use]
     pub fn new(new_pkgs_config: &Packages, applied_pkgs_config: &Packages) -> Self {
         let new_paru_pkgs = new_pkgs_config.paru();
         let applied_paru_pkgs = applied_pkgs_config.paru();
@@ -34,8 +33,6 @@ impl PackageChanges {
         }
     }
 
-    /// # Errors
-    /// Return error if `paru` command fails
     pub fn apply(&self) -> Result<()> {
         if self.install.paru().is_empty() {
             log::info!("No packages to install.");

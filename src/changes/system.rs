@@ -11,7 +11,6 @@ pub struct SystemChanges {
 }
 
 impl SystemChanges {
-    #[must_use]
     pub fn new(new_system_config: &System, applied_system_config: &System) -> Self {
         let hostname = if new_system_config.hostname() == applied_system_config.hostname() {
             None
@@ -21,8 +20,6 @@ impl SystemChanges {
         Self { hostname }
     }
 
-    /// # Errors
-    /// Returns error if `hostname` or `sudo hostname {name}` fail.
     pub fn apply(&self) -> Result<()> {
         if let Some(hostname) = self.hostname.clone() {
             let configured_hostname = hostname;

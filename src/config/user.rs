@@ -10,25 +10,16 @@ const CURRENT_USERS_CONFIG_FILE_NAME: &str = "current_users_config";
 pub struct Users(Vec<User>);
 
 impl Users {
-    #[must_use]
-    pub fn new(users: Vec<User>) -> Self {
-        Self(users)
-    }
-
-    #[must_use]
     pub fn users(&self) -> Vec<User> {
         self.0.clone()
     }
 
-    #[must_use]
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {
         let data = std::fs::read(data_path.join(CURRENT_USERS_CONFIG_FILE_NAME)).ok()?;
         let applied_config_data = bitcode::deserialize(&data).ok()?;
         Some(applied_config_data)
     }
 
-    /// # Errors
-    /// TODO
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
             std::fs::File::create(data_path.join(CURRENT_USERS_CONFIG_FILE_NAME))?;
@@ -45,23 +36,18 @@ pub struct User {
 }
 
 impl User {
-    #[must_use]
     pub fn new(name: String, groups: Vec<String>) -> Self {
         Self { name, groups }
     }
 
-    #[must_use]
     pub fn name(&self) -> String {
         self.name.clone()
     }
 
-    #[must_use]
     pub fn groups(&self) -> Vec<String> {
         self.groups.clone()
     }
 
-    /// # Errors
-    /// TODO
     pub fn add_groups(&self) -> Result<()> {
         let user = self.name();
         let groups = self.groups();
@@ -94,8 +80,6 @@ impl User {
         Ok(())
     }
 
-    /// # Errors
-    /// TODO
     pub fn remove_groups(&self) -> Result<()> {
         let user = self.name();
         let groups = self.groups();

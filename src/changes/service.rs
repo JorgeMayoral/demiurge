@@ -11,7 +11,6 @@ pub struct ServiceChanges {
 }
 
 impl ServiceChanges {
-    #[must_use]
     pub fn new(new_services_config: &Services, applied_services_config: &Services) -> Self {
         let services_to_enable: Vec<Service> = new_services_config
             .services()

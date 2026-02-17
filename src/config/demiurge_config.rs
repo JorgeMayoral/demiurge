@@ -16,32 +16,26 @@ pub struct DemiurgeConfig {
 }
 
 impl DemiurgeConfig {
-    #[must_use]
     pub fn system(&self) -> System {
         self.system.clone()
     }
 
-    #[must_use]
     pub fn packages(&self) -> Packages {
         self.packages.clone()
     }
 
-    #[must_use]
     pub fn dotfiles(&self) -> Dotfiles {
         self.dotfiles.clone()
     }
 
-    #[must_use]
     pub fn services(&self) -> Services {
         self.services.clone()
     }
 
-    #[must_use]
     pub fn users(&self) -> Users {
         self.users.clone()
     }
 
-    #[must_use]
     pub fn read_applied_config() -> Self {
         let data_path = Self::get_data_dir();
         let applied_system_config = System::read_applied_config(&data_path).unwrap_or_default();
@@ -58,8 +52,6 @@ impl DemiurgeConfig {
         }
     }
 
-    /// # Errors
-    /// TODO
     pub fn save_applied_config(self) -> Result<()> {
         let data_path = Self::get_data_dir();
         std::fs::create_dir_all(&data_path)?;

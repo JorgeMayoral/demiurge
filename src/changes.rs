@@ -27,7 +27,6 @@ pub struct Changes {
 }
 
 impl Changes {
-    #[must_use]
     pub fn new(new_config: &DemiurgeConfig, applied_config: &DemiurgeConfig) -> Self {
         Self {
             system: SystemChanges::new(&new_config.system(), &applied_config.system()),
@@ -38,8 +37,6 @@ impl Changes {
         }
     }
 
-    /// # Errors
-    /// Return error if applying system or package changes fails
     pub fn apply(&self, overwrite_symlinks: bool) -> Result<()> {
         log::info!("Applying system changes...");
         self.system.apply()?;

@@ -23,15 +23,12 @@ mod user;
 pub struct Demiurge(HashMap<String, DemiurgeConfig>);
 
 impl Demiurge {
-    /// # Errors
-    /// TODO
     pub fn from_file(file: PathBuf) -> Result<Self> {
         let module = Module::load(file)?;
         Runtime::execute_module(&module, vec![], RuntimeOptions::default(), &())
             .context("Failed to execute config module")
     }
 
-    #[must_use]
     pub fn get(&self, name: &str) -> Option<DemiurgeConfig> {
         self.0.get(name).cloned()
     }

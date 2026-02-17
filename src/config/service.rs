@@ -10,25 +10,20 @@ const CURRENT_SERVICES_CONFIG_FILE_NAME: &str = "current_services_config";
 pub struct Services(Vec<Service>);
 
 impl Services {
-    #[must_use]
     pub fn new(services: Vec<Service>) -> Self {
         Self(services)
     }
 
-    #[must_use]
     pub fn services(&self) -> Vec<Service> {
         self.0.clone()
     }
 
-    #[must_use]
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {
         let data = std::fs::read(data_path.join(CURRENT_SERVICES_CONFIG_FILE_NAME)).ok()?;
         let applied_config_data = bitcode::deserialize(&data).ok()?;
         Some(applied_config_data)
     }
 
-    /// # Errors
-    /// TODO
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
             std::fs::File::create(data_path.join(CURRENT_SERVICES_CONFIG_FILE_NAME))?;
@@ -42,18 +37,10 @@ impl Services {
 pub struct Service(String);
 
 impl Service {
-    #[must_use]
-    pub fn new(service: String) -> Self {
-        Self(service)
-    }
-
-    #[must_use]
     pub fn service(&self) -> String {
         self.0.clone()
     }
 
-    /// # Errors
-    /// TODO
     pub fn enable(&self) -> Result<()> {
         let service = self.0.clone();
         duct::cmd!("sudo", "systemctl", "start", &service).run()?;
@@ -61,8 +48,6 @@ impl Service {
         Ok(())
     }
 
-    /// # Errors
-    /// TODO
     pub fn disable(&self) -> Result<()> {
         let service = self.0.clone();
         duct::cmd!("sudo", "systemctl", "stop", &service).run()?;
