@@ -23,12 +23,8 @@ pub struct ApplyArgs {
     /// Allows overwriting already existing dotfile symlinks
     #[arg(long)]
     overwrite_symlink: bool,
-    /// Read the configuration from a JSON file
-    #[arg(long, conflicts_with = "from_yaml")]
-    from_json: bool,
-    /// Read the configuration from a YAML file
-    #[arg(long)]
-    from_yaml: bool,
+    #[clap(flatten)]
+    from_group: FromGroup,
     /// Read the given configuration from stdin. Requires JSON or YAML flag.
     #[arg(
         long,
@@ -39,12 +35,23 @@ pub struct ApplyArgs {
     stdin: bool,
 }
 
+#[derive(Debug, Args, Clone)]
+#[group(required = true, multiple = false)]
+pub struct FromGroup {
+    /// Read the configuration from a JSON file
+    #[arg(long, conflicts_with = "from_yaml")]
+    from_json: bool,
+    /// Read the configuration from a YAML file
+    #[arg(long)]
+    from_yaml: bool,
+}
+
 impl ApplyArgs {
     pub fn run(self) -> Result<()> {
-        let configs: Demiurge = if self.from_json {
+        let configs: Demiurge = if self.from_group.from_json {
             let data = Self::read_static_config(self.stdin, self.file)?;
             serde_json::from_str(&data)?
-        } else if self.from_yaml {
+        } else if self.from_group.from_yaml {
             let data = Self::read_static_config(self.stdin, self.file)?;
             serde_norway::from_str(&data)?
         } else {
