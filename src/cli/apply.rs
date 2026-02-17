@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Read, path::PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Args;
@@ -15,8 +15,8 @@ pub struct ApplyArgs {
     #[arg(short, long)]
     dry_run: bool,
     /// The path to the file containing the configuration
-    #[arg(short, long)]
-    file: PathBuf,
+    #[arg(short, long, required_unless_present = "stdin")]
+    file: Option<PathBuf>,
     /// Name of the configuration to apply
     #[arg(short, long)]
     name: String,
@@ -29,18 +29,26 @@ pub struct ApplyArgs {
     /// Read the configuration from a YAML file
     #[arg(long)]
     from_yaml: bool,
+    /// Read the given configuration from stdin. Requires JSON or YAML flag.
+    #[arg(
+        long,
+        requires = "from_json",
+        requires = "from_yaml",
+        conflicts_with = "file"
+    )]
+    stdin: bool,
 }
 
 impl ApplyArgs {
     pub fn run(self) -> Result<()> {
         let configs: Demiurge = if self.from_json {
-            let data = std::fs::read_to_string(self.file)?;
+            let data = Self::read_static_config(self.stdin, self.file)?;
             serde_json::from_str(&data)?
         } else if self.from_yaml {
-            let data = std::fs::read_to_string(self.file)?;
+            let data = Self::read_static_config(self.stdin, self.file)?;
             serde_norway::from_str(&data)?
         } else {
-            Demiurge::from_file(self.file)?
+            Demiurge::from_file(self.file.expect("Should be required by clap in this case"))?
         };
         let config = configs
             .get(&self.name)
@@ -55,5 +63,19 @@ impl ApplyArgs {
         }
 
         Ok(())
+    }
+
+    fn read_static_config(from_stdin: bool, file: Option<PathBuf>) -> Result<String> {
+        if from_stdin {
+            let mut buffer = String::new();
+            std::io::stdin().lock().read_to_string(&mut buffer)?;
+            Ok(buffer)
+        } else {
+            let path = file.context(
+                "A path to the config file should be provided when not reading from stdin.",
+            )?;
+            let data = std::fs::read_to_string(path)?;
+            Ok(data)
+        }
     }
 }
