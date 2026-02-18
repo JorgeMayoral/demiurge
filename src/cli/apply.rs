@@ -28,6 +28,9 @@ pub struct ApplyArgs {
     /// Read the given configuration from stdin. Requires JSON or YAML flag.
     #[arg(long, requires = "format", conflicts_with = "file")]
     stdin: bool,
+    /// Skip the confirmation prompt and apply the configuration.
+    #[arg(long, conflicts_with = "dry_run")]
+    no_confirm: bool,
 }
 
 #[derive(Debug, Args, Clone, Copy)]
@@ -60,8 +63,21 @@ impl ApplyArgs {
         if self.dry_run {
             println!("{changes}");
         } else {
-            changes.apply(self.overwrite_symlink)?;
-            config.save_applied_config()?;
+            let apply = if self.no_confirm {
+                true
+            } else {
+                inquire::Confirm::new("Do you want to apply the changes?")
+                .with_default(false)
+                .with_help_message("This will make changes to your system. You can check what changes will be made with the --dry-run flag.")
+                .prompt()?
+            };
+            if apply {
+                changes.apply(self.overwrite_symlink)?;
+                config.save_applied_config()?;
+            } else {
+                log::error!("Apply operation canceled. Exiting.");
+                std::process::exit(1);
+            }
         }
 
         Ok(())
