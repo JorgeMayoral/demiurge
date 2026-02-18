@@ -47,3 +47,52 @@ impl Cli {
         Ok(())
     }
 }
+
+mod tests {
+
+    #[test]
+    fn apply_valid_flags() {
+        use crate::cli::Cli;
+        use clap::Parser;
+        let valid_inputs = vec![
+            vec!["--", "apply", "-n", "test", "--from-json", "--stdin"],
+            vec!["--", "apply", "-n", "test", "--from-yaml", "--stdin"],
+            vec!["--", "apply", "-f", "./some/config/path.ts", "-n", "test"],
+            vec![
+                "--",
+                "apply",
+                "-f",
+                "./some/config/path.ts",
+                "-n",
+                "test",
+                "-d",
+            ],
+        ];
+        for input in valid_inputs {
+            let cli = Cli::try_parse_from(&input);
+            assert!(cli.is_ok(), "Expected Ok, got Err:\n{}", cli.unwrap_err());
+        }
+    }
+
+    #[test]
+    fn apply_invalid_flags() {
+        use crate::cli::Cli;
+        use clap::Parser;
+        let invalid_inputs = vec![
+            vec!["--", "apply", "-n", "test", "--stdin"],
+            vec![
+                "--",
+                "apply",
+                "-n",
+                "test",
+                "--from-yaml",
+                "--from-json",
+                "--stdin",
+            ],
+        ];
+        for input in invalid_inputs {
+            let cli = Cli::try_parse_from(&input);
+            assert!(cli.is_err(), "Expected Err, got Ok: {:?}", cli.unwrap());
+        }
+    }
+}

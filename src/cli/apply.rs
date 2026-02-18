@@ -26,20 +26,15 @@ pub struct ApplyArgs {
     #[clap(flatten)]
     from_group: FromGroup,
     /// Read the given configuration from stdin. Requires JSON or YAML flag.
-    #[arg(
-        long,
-        requires = "from_json",
-        requires = "from_yaml",
-        conflicts_with = "file"
-    )]
+    #[arg(long, requires = "format", conflicts_with = "file")]
     stdin: bool,
 }
 
-#[derive(Debug, Args, Clone)]
-#[group(required = true, multiple = false)]
+#[derive(Debug, Args, Clone, Copy)]
+#[group(id = "format", args = ["from_json", "from_yaml"], multiple = false)]
 pub struct FromGroup {
     /// Read the configuration from a JSON file
-    #[arg(long, conflicts_with = "from_yaml")]
+    #[arg(long)]
     from_json: bool,
     /// Read the configuration from a YAML file
     #[arg(long)]
