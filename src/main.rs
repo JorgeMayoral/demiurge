@@ -1,15 +1,16 @@
 use anyhow::Result;
 use clap::Parser;
 
+use crate::logging::DemiurgeLog;
+
 mod changes;
 mod cli;
 mod config;
+mod logging;
 mod utils;
 
 fn main() -> Result<()> {
-    pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Info)
-        .init();
+    DemiurgeLog::init();
     let cli = crate::cli::Cli::parse();
     cli.run()
 }
