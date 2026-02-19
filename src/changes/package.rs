@@ -34,16 +34,6 @@ impl PackageChanges {
     }
 
     pub fn apply(&self) -> Result<()> {
-        if self.install.paru().is_empty() {
-            log::info!("No packages to install.");
-        } else {
-            let pkgs_to_install = self.install.clone();
-            log::info!("Installing packages: {}", pkgs_to_install.paru().join(" "));
-            let mut args = vec!["-S".to_owned()];
-            args.extend(pkgs_to_install.paru());
-            duct::cmd("paru", args).run()?;
-        }
-
         if self.remove.paru().is_empty() {
             log::info!("No packages to remove.");
         } else {
@@ -51,6 +41,16 @@ impl PackageChanges {
             log::info!("Removing packages: {}", pkgs_to_remove.paru().join(" "));
             let mut args = vec!["-Rs".to_owned()];
             args.extend(pkgs_to_remove.paru());
+            duct::cmd("paru", args).run()?;
+        }
+
+        if self.install.paru().is_empty() {
+            log::info!("No packages to install.");
+        } else {
+            let pkgs_to_install = self.install.clone();
+            log::info!("Installing packages: {}", pkgs_to_install.paru().join(" "));
+            let mut args = vec!["-S".to_owned()];
+            args.extend(pkgs_to_install.paru());
             duct::cmd("paru", args).run()?;
         }
 
