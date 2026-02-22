@@ -58,8 +58,13 @@ impl UserChanges {
     }
 
     pub fn apply(&self) {
-        self.add_groups.add_groups().unwrap();
-        self.remove_groups.remove_groups().unwrap();
+        if !self.add_groups.groups().is_empty() {
+            self.add_groups.add_groups().unwrap();
+        }
+
+        if !self.remove_groups.groups().is_empty() {
+            self.remove_groups.remove_groups().unwrap();
+        }
     }
 }
 
