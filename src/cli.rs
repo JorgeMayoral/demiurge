@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use clap_verbosity_flag::{InfoLevel, Verbosity};
 
 use crate::cli::{apply::ApplyArgs, eval::EvalArgs, init::InitArgs, schema::SchemaArgs};
 
@@ -13,6 +14,8 @@ mod schema;
 pub struct Cli {
     #[command(subcommand)]
     command: Command,
+    #[command(flatten)]
+    verbosity: Verbosity<InfoLevel>,
 }
 
 #[derive(Debug, Subcommand, Clone)]
@@ -45,6 +48,10 @@ impl Cli {
         }
 
         Ok(())
+    }
+
+    pub fn verbosity(&self) -> Verbosity<InfoLevel> {
+        self.verbosity
     }
 }
 

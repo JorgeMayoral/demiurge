@@ -10,7 +10,7 @@ mod logging;
 mod utils;
 
 fn main() -> Result<()> {
-    DemiurgeLog::init();
     let cli = crate::cli::Cli::parse();
+    DemiurgeLog::init(cli.verbosity());
     cli.run()
 }

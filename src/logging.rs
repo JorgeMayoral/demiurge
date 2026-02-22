@@ -1,3 +1,4 @@
+use clap_verbosity_flag::{InfoLevel, Verbosity};
 use colog::format::CologStyle;
 use log::Level;
 use owo_colors::OwoColorize;
@@ -5,8 +6,9 @@ use owo_colors::OwoColorize;
 pub struct DemiurgeLog;
 
 impl DemiurgeLog {
-    pub fn init() {
+    pub fn init(verbosity: Verbosity<InfoLevel>) {
         colog::default_builder()
+            .filter_level(verbosity.into())
             .format(colog::formatter(CustomPrefixToken))
             .init();
     }
