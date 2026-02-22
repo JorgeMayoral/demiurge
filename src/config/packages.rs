@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{collections::HashMap, io::Write, path::Path};
 
 use anyhow::Result;
 use schemars::JsonSchema;
@@ -7,17 +7,15 @@ use serde::{Deserialize, Serialize};
 const CURRENT_PACKAGES_CONFIG_FILE_NAME: &str = "current_packages_config";
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
-pub struct Packages {
-    paru: Vec<String>,
-}
+pub struct Packages(HashMap<String, Vec<String>>);
 
 impl Packages {
-    pub fn new(paru_pkgs: Vec<String>) -> Self {
-        Self { paru: paru_pkgs }
+    pub fn package_managers(&self) -> Vec<String> {
+        self.0.keys().map(ToOwned::to_owned).collect::<_>()
     }
 
-    pub fn paru(&self) -> Vec<String> {
-        self.paru.clone()
+    pub fn get(&self, pkg_manager: &str) -> Option<Vec<String>> {
+        self.0.get(pkg_manager).map(ToOwned::to_owned)
     }
 
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {

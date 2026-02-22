@@ -5,9 +5,7 @@ declare global {
   }
 
   type Pkgs = string[];
-  interface Packages {
-    paru: Pkgs;
-  }
+  type Packages = { [packageManager: string]: Pkgs };
 
   type Dotfiles = Dotfile[];
   interface Dotfile {
