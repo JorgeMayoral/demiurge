@@ -1,11 +1,13 @@
+when:
+  - event: push
+    branch: main
+  - event: pull_request
+
 steps:
-  test:
-    when:
-      event: [push, pull_request]
-    image: rust
-    environment:
-      CARGO_TERM_COLOR: always
+  - name: test
+    image: rust:1.93.1
     commands:
       - rustup default stable
+      - cargo clippy -j 4
       - cargo check -j 4
       - cargo test -j 4
