@@ -8,6 +8,7 @@ steps:
     image: rust:1.93.1
     commands:
       - rustup default stable
+      - rustup component add clippy
       - cargo clippy -j 4
       - cargo check -j 4
       - cargo test -j 4
