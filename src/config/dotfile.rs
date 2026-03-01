@@ -65,7 +65,7 @@ impl Dotfile {
             utils::path_tilde_expand(self.target()).context("expand target dotfile path")?;
         if !source_path.exists() {
             let error_msg = format!(
-                "The source path \"{}\" doesn't exists.",
+                "The source path \"{}\" doesn't exist.",
                 source_path.display()
             );
             log::error!("{error_msg}");
