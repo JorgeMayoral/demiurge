@@ -34,15 +34,21 @@ impl DotfileChanges {
 
     pub fn apply(&self, overwrite: bool) -> Result<()> {
         for dotfile in self.create.dotfiles() {
-            dotfile
-                .create_symlink(overwrite)
-                .with_context(|| format!("create symlink for dotfile \"{}\"", dotfile.source().display()))?;
+            dotfile.create_symlink(overwrite).with_context(|| {
+                format!(
+                    "create symlink for dotfile \"{}\"",
+                    dotfile.source().display()
+                )
+            })?;
         }
 
         for dotfile in self.remove.dotfiles() {
-            dotfile
-                .remove_symlink()
-                .with_context(|| format!("remove symlink for dotfile \"{}\"", dotfile.source().display()))?;
+            dotfile.remove_symlink().with_context(|| {
+                format!(
+                    "remove symlink for dotfile \"{}\"",
+                    dotfile.source().display()
+                )
+            })?;
         }
 
         Ok(())
@@ -106,6 +112,63 @@ mod tests {
 
     fn dots(json: &str) -> Dotfiles {
         serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn apply_does_nothing_when_no_changes() {
+        let changes = DotfileChanges {
+            create: dots(r#"[]"#),
+            remove: dots(r#"[]"#),
+        };
+        assert!(changes.apply(false).is_ok());
+    }
+
+    #[test]
+    fn apply_create_fails_when_source_does_not_exist() {
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let create = dots(&format!(
+            r#"[{{"source": "/demiurge-test-nonexistent-src", "target": "{}"}}]"#,
+            tgt_dir.path().display()
+        ));
+        let changes = DotfileChanges {
+            create,
+            remove: dots(r#"[]"#),
+        };
+        let err = changes.apply(false).unwrap_err();
+        assert!(format!("{err:?}").contains("create symlink for dotfile"));
+    }
+
+    #[test]
+    fn apply_create_fails_when_target_exists_and_overwrite_is_false() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        std::fs::write(src_dir.path().join("file.txt"), "src").unwrap();
+        std::fs::write(tgt_dir.path().join("file.txt"), "existing").unwrap();
+
+        let create = dots(&format!(
+            r#"[{{"source": "{}", "target": "{}"}}]"#,
+            src_dir.path().display(),
+            tgt_dir.path().display()
+        ));
+        let changes = DotfileChanges {
+            create,
+            remove: dots(r#"[]"#),
+        };
+        assert!(changes.apply(false).is_err());
+    }
+
+    #[test]
+    fn apply_remove_is_no_op_when_target_absent() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let remove = dots(&format!(
+            r#"[{{"source": "{}", "target": "/demiurge-test-nonexistent-tgt"}}]"#,
+            src_dir.path().display()
+        ));
+        let changes = DotfileChanges {
+            create: dots(r#"[]"#),
+            remove,
+        };
+        assert!(changes.apply(false).is_ok());
     }
 
     #[test]

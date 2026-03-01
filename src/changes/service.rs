@@ -97,6 +97,13 @@ mod tests {
     }
 
     #[test]
+    fn apply_does_nothing_when_no_changes() {
+        let svcs_config = svcs(r#"["nginx", "docker"]"#);
+        let changes = ServiceChanges::new(&svcs_config, &svcs_config);
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
     fn new_service_goes_to_enable_set() {
         let new = svcs(r#"["nginx", "docker"]"#);
         let applied = svcs(r#"["nginx"]"#);

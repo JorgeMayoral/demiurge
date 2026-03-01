@@ -188,6 +188,21 @@ mod tests {
     }
 
     #[test]
+    fn apply_does_nothing_when_no_changes() {
+        let pkgs_config = pkgs(r#"{"paru": ["vim", "git"]}"#);
+        let changes = PackageChanges::new(&pkgs_config, &pkgs_config);
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
+    fn apply_skips_unsupported_package_manager_gracefully() {
+        let new = pkgs(r#"{"unknown-pm": ["some-package"]}"#);
+        let applied = pkgs(r#"{}"#);
+        let changes = PackageChanges::new(&new, &applied);
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
     fn new_package_goes_to_install_set() {
         let new = pkgs(r#"{"paru": ["vim", "git"]}"#);
         let applied = pkgs(r#"{"paru": ["vim"]}"#);

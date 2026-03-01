@@ -62,6 +62,14 @@ mod tests {
     }
 
     #[test]
+    fn apply_does_nothing_when_hostname_unchanged() {
+        let system = make_system("myhost");
+        let changes = SystemChanges::new(&system, &system);
+        assert!(changes.hostname.is_none());
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
     fn hostname_unchanged_produces_no_change() {
         let system = make_system("myhost");
         let changes = SystemChanges::new(&system, &system);

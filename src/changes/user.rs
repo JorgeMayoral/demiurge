@@ -147,6 +147,22 @@ mod tests {
     }
 
     #[test]
+    fn user_changes_apply_does_nothing_when_no_group_changes() {
+        let user = make_user("alice", &["wheel", "docker"]);
+        let changes = UserChanges::new(&user, &user);
+        assert!(changes.add_groups.groups().is_empty());
+        assert!(changes.remove_groups.groups().is_empty());
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
+    fn users_changes_apply_does_nothing_when_no_user_changes() {
+        let users = make_users(r#"[{"name": "alice", "groups": ["wheel"]}]"#);
+        let changes = UsersChanges::new(&users, &users);
+        assert!(changes.apply().is_ok());
+    }
+
+    #[test]
     fn new_group_goes_to_add_set() {
         let new_user = make_user("alice", &["wheel", "docker"]);
         let applied_user = make_user("alice", &["wheel"]);
