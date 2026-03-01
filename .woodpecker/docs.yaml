@@ -11,7 +11,7 @@ steps:
   - name: publish
     image: alpine/git
     environment:
-      - MDBOOK_OUTPUT: docs/book
+      - MDBOOK_OUTPUT: "docs/book"
       - MAIL:
           from_secret: mail
       - CODEBERG_TOKEN:
