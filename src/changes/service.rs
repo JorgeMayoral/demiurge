@@ -97,7 +97,7 @@ mod tests {
     use crate::config::Services;
 
     fn svcs(json: &str) -> Services {
-        serde_json::from_str(json).unwrap()
+        serde_json::from_str(json).expect("literal is well-formed JSON")
     }
 
     #[test]

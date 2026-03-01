@@ -99,7 +99,7 @@ mod tests {
         ];
         for input in invalid_inputs {
             let cli = Cli::try_parse_from(&input);
-            assert!(cli.is_err(), "Expected Err, got Ok: {:?}", cli.unwrap());
+            assert!(cli.is_err(), "Expected Err, got Ok: {:?}", cli.expect("called only when is_err() is false"));
         }
     }
 
@@ -126,7 +126,7 @@ mod tests {
         assert!(
             cli.is_err(),
             "Expected Err for mutually exclusive flags, got Ok: {:?}",
-            cli.unwrap()
+            cli.expect("called only when is_err() is false")
         );
     }
 }

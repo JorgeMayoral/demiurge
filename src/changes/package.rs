@@ -20,7 +20,7 @@ impl PackageChanges {
         for package_manager in new_pkgs_config.package_managers() {
             let pkgs_to_install = new_pkgs_config
                 .get(&package_manager)
-                .unwrap()
+                .expect("package_manager is obtained from new_pkgs_config's own keys")
                 .iter()
                 .filter(|pkg| {
                     !applied_pkgs_config
@@ -188,7 +188,7 @@ mod tests {
     use crate::config::Packages;
 
     fn pkgs(json: &str) -> Packages {
-        serde_json::from_str(json).unwrap()
+        serde_json::from_str(json).expect("literal is well-formed JSON")
     }
 
     #[test]
@@ -211,7 +211,7 @@ mod tests {
         let new = pkgs(r#"{"paru": ["vim", "git"]}"#);
         let applied = pkgs(r#"{"paru": ["vim"]}"#);
         let changes = PackageChanges::new(&new, &applied);
-        let paru = changes.0.get("paru").unwrap();
+        let paru = changes.0.get("paru").expect("\"paru\" key was obtained from this map's iterator");
         assert!(paru.install.contains(&"git".to_owned()));
         assert!(paru.remove.is_empty());
     }
@@ -221,7 +221,7 @@ mod tests {
         let new = pkgs(r#"{"paru": ["vim"]}"#);
         let applied = pkgs(r#"{"paru": ["vim", "git"]}"#);
         let changes = PackageChanges::new(&new, &applied);
-        let paru = changes.0.get("paru").unwrap();
+        let paru = changes.0.get("paru").expect("\"paru\" key was obtained from this map's iterator");
         assert!(paru.remove.contains(&"git".to_owned()));
         assert!(paru.install.is_empty());
     }
@@ -230,7 +230,7 @@ mod tests {
     fn unchanged_packages_produce_empty_sets() {
         let pkgs_config = pkgs(r#"{"paru": ["vim", "git"]}"#);
         let changes = PackageChanges::new(&pkgs_config, &pkgs_config);
-        let paru = changes.0.get("paru").unwrap();
+        let paru = changes.0.get("paru").expect("\"paru\" key was obtained from this map's iterator");
         assert!(paru.install.is_empty());
         assert!(paru.remove.is_empty());
     }
@@ -240,7 +240,7 @@ mod tests {
         let new = pkgs(r#"{"cargo": ["ripgrep", "fd"]}"#);
         let applied = pkgs(r#"{}"#);
         let changes = PackageChanges::new(&new, &applied);
-        let cargo = changes.0.get("cargo").unwrap();
+        let cargo = changes.0.get("cargo").expect("\"cargo\" key was obtained from this map's iterator");
         assert!(cargo.install.contains(&"ripgrep".to_owned()));
         assert!(cargo.install.contains(&"fd".to_owned()));
         assert!(cargo.remove.is_empty());

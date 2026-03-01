@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn dotfiles_persistence_round_trip() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let dotfiles = Dotfiles::new(vec![
             Dotfile {
                 source: "/dotfiles/nvim".into(),
@@ -200,29 +200,29 @@ mod tests {
                 target: "/home/user/.zshrc".into(),
             },
         ]);
-        dotfiles.save_applied_config(dir.path()).unwrap();
-        let loaded = Dotfiles::read_applied_config(dir.path()).unwrap();
+        dotfiles.save_applied_config(dir.path()).expect("temp dir is writable");
+        let loaded = Dotfiles::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(loaded.dotfiles().len(), 2);
     }
 
     #[test]
     fn read_applied_config_returns_none_when_missing() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         assert!(Dotfiles::read_applied_config(dir.path()).is_none());
     }
 
     #[test]
     fn create_symlink_links_single_file() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let src_file = src_dir.path().join("file.txt");
-        std::fs::write(&src_file, "hello").unwrap();
+        std::fs::write(&src_file, "hello").expect("temp dir is writable");
 
         let dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().to_path_buf(),
         };
-        dotfile.create_symlink(false).unwrap();
+        dotfile.create_symlink(false).expect("source exists and target dir is empty");
 
         let link = tgt_dir.path().join("file.txt");
         assert!(
@@ -230,22 +230,22 @@ mod tests {
             "expected a symlink at {}",
             link.display()
         );
-        assert_eq!(std::fs::read_to_string(&link).unwrap(), "hello");
+        assert_eq!(std::fs::read_to_string(&link).expect("file was just written"), "hello");
     }
 
     #[test]
     fn create_symlink_recurses_into_subdirectories() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
-        std::fs::create_dir(src_dir.path().join("sub")).unwrap();
-        std::fs::write(src_dir.path().join("root.txt"), "root").unwrap();
-        std::fs::write(src_dir.path().join("sub").join("nested.txt"), "nested").unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        std::fs::create_dir(src_dir.path().join("sub")).expect("temp dir is writable");
+        std::fs::write(src_dir.path().join("root.txt"), "root").expect("temp dir is writable");
+        std::fs::write(src_dir.path().join("sub").join("nested.txt"), "nested").expect("temp dir is writable");
 
         let dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().to_path_buf(),
         };
-        dotfile.create_symlink(false).unwrap();
+        dotfile.create_symlink(false).expect("source exists and target dir is empty");
 
         assert!(tgt_dir.path().join("root.txt").is_symlink());
         assert!(tgt_dir.path().join("sub").join("nested.txt").is_symlink());
@@ -253,36 +253,36 @@ mod tests {
 
     #[test]
     fn create_symlink_with_overwrite_replaces_existing() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let src_file = src_dir.path().join("file.txt");
-        std::fs::write(&src_file, "new content").unwrap();
+        std::fs::write(&src_file, "new content").expect("temp dir is writable");
         // pre-place a regular file at the destination
-        std::fs::write(tgt_dir.path().join("file.txt"), "old content").unwrap();
+        std::fs::write(tgt_dir.path().join("file.txt"), "old content").expect("temp dir is writable");
 
         let dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().to_path_buf(),
         };
-        dotfile.create_symlink(true).unwrap();
+        dotfile.create_symlink(true).expect("source exists and target dir is empty");
 
         let link = tgt_dir.path().join("file.txt");
         assert!(link.is_symlink());
-        assert_eq!(std::fs::read_to_string(&link).unwrap(), "new content");
+        assert_eq!(std::fs::read_to_string(&link).expect("file was just written"), "new content");
     }
 
     #[test]
     fn remove_symlink_deletes_link_and_leaves_source_intact() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let src_file = src_dir.path().join("file.txt");
-        std::fs::write(&src_file, "data").unwrap();
+        std::fs::write(&src_file, "data").expect("temp dir is writable");
 
         let dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().to_path_buf(),
         };
-        dotfile.create_symlink(false).unwrap();
+        dotfile.create_symlink(false).expect("source exists and target dir is empty");
         assert!(tgt_dir.path().join("file.txt").is_symlink());
 
         // remove_symlink operates on the target directory
@@ -290,7 +290,7 @@ mod tests {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().join("file.txt"),
         };
-        remove_dotfile.remove_symlink().unwrap();
+        remove_dotfile.remove_symlink().expect("target path is valid");
 
         assert!(!tgt_dir.path().join("file.txt").exists());
         assert!(src_file.exists(), "source file must survive removal");
@@ -298,13 +298,13 @@ mod tests {
 
     #[test]
     fn remove_symlink_is_no_op_when_target_is_absent() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().join("nonexistent"),
         };
         // should not error
-        dotfile.remove_symlink().unwrap();
+        dotfile.remove_symlink().expect("target path is valid");
     }
 }

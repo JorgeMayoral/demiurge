@@ -62,7 +62,7 @@ mod tests {
     use crate::config::System;
 
     fn make_system(hostname: &str) -> System {
-        serde_json::from_value(serde_json::json!({ "hostname": hostname })).unwrap()
+        serde_json::from_value(serde_json::json!({ "hostname": hostname })).expect("value was just parsed from valid JSON")
     }
 
     #[test]

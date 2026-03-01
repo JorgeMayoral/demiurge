@@ -151,7 +151,7 @@ mod tests {
     }
 
     fn make_users(json: &str) -> Users {
-        serde_json::from_str(json).unwrap()
+        serde_json::from_str(json).expect("literal is well-formed JSON")
     }
 
     #[test]

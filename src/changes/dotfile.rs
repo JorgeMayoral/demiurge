@@ -115,7 +115,7 @@ mod tests {
     use crate::config::Dotfiles;
 
     fn dots(json: &str) -> Dotfiles {
-        serde_json::from_str(json).unwrap()
+        serde_json::from_str(json).expect("literal is well-formed JSON")
     }
 
     #[test]
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn apply_create_fails_when_source_does_not_exist() {
-        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let create = dots(&format!(
             r#"[{{"source": "/demiurge-test-nonexistent-src", "target": "{}"}}]"#,
             tgt_dir.path().display()
@@ -144,10 +144,10 @@ mod tests {
 
     #[test]
     fn apply_create_fails_when_target_exists_and_overwrite_is_false() {
-        let src_dir = tempfile::TempDir::new().unwrap();
-        let tgt_dir = tempfile::TempDir::new().unwrap();
-        std::fs::write(src_dir.path().join("file.txt"), "src").unwrap();
-        std::fs::write(tgt_dir.path().join("file.txt"), "existing").unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        std::fs::write(src_dir.path().join("file.txt"), "src").expect("temp dir is writable");
+        std::fs::write(tgt_dir.path().join("file.txt"), "existing").expect("temp dir is writable");
 
         let create = dots(&format!(
             r#"[{{"source": "{}", "target": "{}"}}]"#,
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn apply_remove_is_no_op_when_target_absent() {
-        let src_dir = tempfile::TempDir::new().unwrap();
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let remove = dots(&format!(
             r#"[{{"source": "{}", "target": "/demiurge-test-nonexistent-tgt"}}]"#,
             src_dir.path().display()

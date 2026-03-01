@@ -87,18 +87,18 @@ mod tests {
 
     #[test]
     fn system_persistence_round_trip() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let system = System {
             hostname: "persistedhost".to_owned(),
         };
-        system.save_applied_config(dir.path()).unwrap();
-        let loaded = System::read_applied_config(dir.path()).unwrap();
+        system.save_applied_config(dir.path()).expect("temp dir is writable");
+        let loaded = System::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(loaded.hostname(), "persistedhost");
     }
 
     #[test]
     fn read_applied_config_returns_none_when_missing() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let result = System::read_applied_config(dir.path());
         assert!(result.is_none());
     }

@@ -28,29 +28,29 @@ mod tests {
 
     #[test]
     fn tilde_prefix_expands_to_home() {
-        let result = path_tilde_expand("~/Documents/notes.txt".into()).unwrap();
-        let home = directories::UserDirs::new().unwrap();
+        let result = path_tilde_expand("~/Documents/notes.txt".into()).expect("path is valid and home dir exists");
+        let home = directories::UserDirs::new().expect("test environment has a valid home directory");
         assert_eq!(result, home.home_dir().join("Documents/notes.txt"));
     }
 
     #[test]
     fn tilde_alone_expands_to_home_dir() {
-        let result = path_tilde_expand("~".into()).unwrap();
-        let home = directories::UserDirs::new().unwrap();
+        let result = path_tilde_expand("~".into()).expect("path is valid and home dir exists");
+        let home = directories::UserDirs::new().expect("test environment has a valid home directory");
         assert_eq!(result, home.home_dir().to_path_buf());
     }
 
     #[test]
     fn absolute_path_without_tilde_is_unchanged() {
         let path = PathBuf::from("/usr/local/bin");
-        let result = path_tilde_expand(path.clone()).unwrap();
+        let result = path_tilde_expand(path.clone()).expect("path is valid and home dir exists");
         assert_eq!(result, path);
     }
 
     #[test]
     fn relative_path_without_tilde_is_unchanged() {
         let path = PathBuf::from("some/relative/path");
-        let result = path_tilde_expand(path.clone()).unwrap();
+        let result = path_tilde_expand(path.clone()).expect("path is valid and home dir exists");
         assert_eq!(result, path);
     }
 }

@@ -159,26 +159,26 @@ mod tests {
 
     #[test]
     fn users_persistence_round_trip() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let users: Users = serde_json::from_str(
             r#"[{"name": "alice", "groups": ["wheel", "docker"]}, {"name": "bob", "groups": []}]"#,
         )
-        .unwrap();
-        users.save_applied_config(dir.path()).unwrap();
-        let loaded = Users::read_applied_config(dir.path()).unwrap();
+        .expect("literal is well-formed JSON");
+        users.save_applied_config(dir.path()).expect("temp dir is writable");
+        let loaded = Users::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(loaded.users().len(), 2);
         let alice = loaded
             .users()
             .into_iter()
             .find(|u| u.name() == "alice")
-            .unwrap();
+            .expect("alice was inserted before this find");
         assert!(alice.groups().contains(&"wheel".to_owned()));
         assert!(alice.groups().contains(&"docker".to_owned()));
     }
 
     #[test]
     fn read_applied_config_returns_none_when_missing() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         assert!(Users::read_applied_config(dir.path()).is_none());
     }
 

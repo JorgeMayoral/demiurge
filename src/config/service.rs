@@ -95,13 +95,13 @@ mod tests {
 
     #[test]
     fn services_persistence_round_trip() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let services = Services::new(vec![
             Service("nginx".to_owned()),
             Service("docker".to_owned()),
         ]);
-        services.save_applied_config(dir.path()).unwrap();
-        let loaded = Services::read_applied_config(dir.path()).unwrap();
+        services.save_applied_config(dir.path()).expect("temp dir is writable");
+        let loaded = Services::read_applied_config(dir.path()).expect("config was just saved");
         let names: Vec<String> = loaded.services().iter().map(|s| s.service()).collect();
         assert!(names.contains(&"nginx".to_owned()));
         assert!(names.contains(&"docker".to_owned()));
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn read_applied_config_returns_none_when_missing() {
-        let dir = tempfile::TempDir::new().unwrap();
+        let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         assert!(Services::read_applied_config(dir.path()).is_none());
     }
 }
