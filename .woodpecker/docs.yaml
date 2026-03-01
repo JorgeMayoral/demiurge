@@ -6,6 +6,7 @@ steps:
   - name: build
     image: peaceiris/mdbook:latest
     commands:
+      - cd docs
       - mdbook build
 
   - name: publish
