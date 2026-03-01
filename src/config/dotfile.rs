@@ -57,11 +57,12 @@ impl Dotfile {
         let source_path = utils::path_tilde_expand(self.source()).canonicalize()?;
         let target_path = utils::path_tilde_expand(self.target());
         if !source_path.exists() {
-            log::error!(
+            let error_msg = format!(
                 "The source path \"{}\" doesn't exists.",
                 source_path.display()
             );
-            std::process::exit(1);
+            log::error!("{error_msg}");
+            return Err(anyhow::anyhow!(error_msg));
         }
         for entry in walkdir::WalkDir::new(&source_path) {
             let entry = entry?;
@@ -73,11 +74,12 @@ impl Dotfile {
             let destination_path = target_path.join(relative_path);
             if destination_path.exists() || destination_path.is_symlink() {
                 if !overwrite {
-                    log::error!(
+                    let error_msg = format!(
                         "The target path \"{}\" already exists or is a symlink",
                         destination_path.display()
                     );
-                    std::process::exit(1);
+                    log::error!("{error_msg}");
+                    return Err(anyhow::anyhow!(error_msg));
                 }
                 log::warn!("Removing {}", destination_path.display());
                 if destination_path.is_dir() && !destination_path.is_symlink() {
