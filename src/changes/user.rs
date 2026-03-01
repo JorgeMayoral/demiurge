@@ -27,7 +27,7 @@ impl UsersChanges {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.0.iter().all(|c| c.is_empty())
+        self.0.iter().all(UserChanges::is_empty)
     }
 
     pub fn apply(&self) -> Result<()> {
