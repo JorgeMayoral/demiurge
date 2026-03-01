@@ -14,6 +14,24 @@ impl Users {
         self.0.clone()
     }
 
+    pub fn validate(&self) -> Vec<String> {
+        let mut errors = vec![];
+        for user in &self.0 {
+            if user.name.is_empty() {
+                errors.push("user name must not be empty".to_owned());
+            }
+            for group in &user.groups {
+                if group.is_empty() {
+                    errors.push(format!(
+                        "group name for user {:?} must not be empty",
+                        user.name
+                    ));
+                }
+            }
+        }
+        errors
+    }
+
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {
         let data = std::fs::read(data_path.join(CURRENT_USERS_CONFIG_FILE_NAME)).ok()?;
         let applied_config_data = bitcode::deserialize(&data).ok()?;
@@ -109,6 +127,35 @@ impl User {
 #[cfg(test)]
 mod tests {
     use super::{User, Users};
+
+    #[test]
+    fn validate_valid_users_is_ok() {
+        let users = Users(vec![User::new(
+            "alice".to_owned(),
+            vec!["wheel".to_owned()],
+        )]);
+        assert!(users.validate().is_empty());
+    }
+
+    #[test]
+    fn validate_empty_user_name_is_invalid() {
+        let users = Users(vec![User::new("".to_owned(), vec![])]);
+        let errors = users.validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("user name"));
+    }
+
+    #[test]
+    fn validate_empty_group_name_is_invalid() {
+        let users = Users(vec![User::new(
+            "alice".to_owned(),
+            vec!["wheel".to_owned(), "".to_owned()],
+        )]);
+        let errors = users.validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("group name"));
+        assert!(errors[0].contains("alice"));
+    }
 
     #[test]
     fn users_persistence_round_trip() {

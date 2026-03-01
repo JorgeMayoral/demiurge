@@ -18,6 +18,14 @@ impl Services {
         self.0.clone()
     }
 
+    pub fn validate(&self) -> Vec<String> {
+        self.0
+            .iter()
+            .filter(|s| s.service().is_empty())
+            .map(|_| "service name must not be empty".to_owned())
+            .collect()
+    }
+
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {
         let data = std::fs::read(data_path.join(CURRENT_SERVICES_CONFIG_FILE_NAME)).ok()?;
         let applied_config_data = bitcode::deserialize(&data).ok()?;
@@ -70,6 +78,20 @@ impl Service {
 #[cfg(test)]
 mod tests {
     use super::{Service, Services};
+
+    #[test]
+    fn validate_valid_services_is_ok() {
+        let services = Services::new(vec![Service("nginx".to_owned())]);
+        assert!(services.validate().is_empty());
+    }
+
+    #[test]
+    fn validate_empty_service_name_is_invalid() {
+        let services = Services::new(vec![Service("".to_owned())]);
+        let errors = services.validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("service name"));
+    }
 
     #[test]
     fn services_persistence_round_trip() {

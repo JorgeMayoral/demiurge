@@ -14,6 +14,21 @@ impl Packages {
         self.0.keys().map(ToOwned::to_owned).collect::<_>()
     }
 
+    pub fn validate(&self) -> Vec<String> {
+        let mut errors = vec![];
+        for (pm, pkgs) in &self.0 {
+            if pm.is_empty() {
+                errors.push("package manager name must not be empty".to_owned());
+            }
+            for pkg in pkgs {
+                if pkg.is_empty() {
+                    errors.push(format!("package name in {pm:?} must not be empty"));
+                }
+            }
+        }
+        errors
+    }
+
     pub fn get(&self, pkg_manager: &str) -> Option<Vec<String>> {
         self.0.get(pkg_manager).map(ToOwned::to_owned)
     }
@@ -39,6 +54,29 @@ impl Packages {
 #[cfg(test)]
 mod tests {
     use super::Packages;
+
+    #[test]
+    fn validate_valid_packages_is_ok() {
+        let pkgs: Packages =
+            serde_json::from_str(r#"{"apt": ["vim", "git"]}"#).unwrap();
+        assert!(pkgs.validate().is_empty());
+    }
+
+    #[test]
+    fn validate_empty_package_manager_name_is_invalid() {
+        let pkgs: Packages = serde_json::from_str(r#"{"": ["vim"]}"#).unwrap();
+        let errors = pkgs.validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("package manager name"));
+    }
+
+    #[test]
+    fn validate_empty_package_name_is_invalid() {
+        let pkgs: Packages = serde_json::from_str(r#"{"apt": ["vim", ""]}"#).unwrap();
+        let errors = pkgs.validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("package name"));
+    }
 
     #[test]
     fn packages_persistence_round_trip() {

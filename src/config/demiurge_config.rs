@@ -36,6 +36,25 @@ impl DemiurgeConfig {
         &self.users
     }
 
+    pub fn validate(&self) -> Result<()> {
+        let errors: Vec<String> = [
+            self.system.validate(),
+            self.packages.validate(),
+            self.dotfiles.validate(),
+            self.services.validate(),
+            self.users.validate(),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            anyhow::bail!("config validation failed:\n{}", errors.join("\n"))
+        }
+    }
+
     pub fn read_applied_config() -> Option<Self> {
         let data_path = Self::get_data_dir().ok()?;
         let applied_system_config = System::read_applied_config(&data_path).unwrap_or_default();
@@ -129,5 +148,39 @@ mod tests {
         assert!(config.dotfiles().dotfiles().is_empty());
         assert!(config.services().services().is_empty());
         assert!(config.users().users().is_empty());
+    }
+
+    #[test]
+    fn validate_valid_config_is_ok() {
+        let config: DemiurgeConfig = serde_json::from_str(FULL_CONFIG_JSON).unwrap();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_aggregates_errors_from_all_sub_configs() {
+        // hostname with slash, empty package name, empty service name — three
+        // distinct sub-configs each contribute at least one error.
+        let json = r#"{
+            "system": {"hostname": "bad/host"},
+            "packages": {"apt": [""]},
+            "dotfiles": [],
+            "services": [""],
+            "users": []
+        }"#;
+        let config: DemiurgeConfig = serde_json::from_str(json).unwrap();
+        let err = config.validate().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("hostname"),
+            "expected hostname error in: {msg}"
+        );
+        assert!(
+            msg.contains("package name"),
+            "expected package error in: {msg}"
+        );
+        assert!(
+            msg.contains("service name"),
+            "expected service error in: {msg}"
+        );
     }
 }

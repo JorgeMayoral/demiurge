@@ -16,6 +16,22 @@ impl System {
         self.hostname.clone()
     }
 
+    pub fn validate(&self) -> Vec<String> {
+        let mut errors = vec![];
+        if !self.hostname.is_empty()
+            && self
+                .hostname
+                .chars()
+                .any(|c| c.is_ascii_whitespace() || c == '/')
+        {
+            errors.push(format!(
+                "hostname {:?} must not contain whitespace or '/'",
+                self.hostname
+            ));
+        }
+        errors
+    }
+
     pub fn read_applied_config(data_path: &Path) -> Option<Self> {
         let data = std::fs::read(data_path.join(CURRENT_SYSTEM_CONFIG_FILE_NAME)).ok()?;
         let applied_config_data = bitcode::deserialize(&data).ok()?;
@@ -37,6 +53,37 @@ impl System {
 #[cfg(test)]
 mod tests {
     use super::System;
+
+    fn system(hostname: &str) -> System {
+        System {
+            hostname: hostname.to_owned(),
+        }
+    }
+
+    #[test]
+    fn validate_empty_hostname_is_valid() {
+        assert!(system("").validate().is_empty());
+    }
+
+    #[test]
+    fn validate_normal_hostname_is_valid() {
+        assert!(system("myhost").validate().is_empty());
+        assert!(system("my-host.local").validate().is_empty());
+    }
+
+    #[test]
+    fn validate_hostname_with_space_is_invalid() {
+        let errors = system("bad host").validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("whitespace"));
+    }
+
+    #[test]
+    fn validate_hostname_with_slash_is_invalid() {
+        let errors = system("bad/host").validate();
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("'/'"));
+    }
 
     #[test]
     fn system_persistence_round_trip() {
