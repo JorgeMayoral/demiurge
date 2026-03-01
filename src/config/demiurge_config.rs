@@ -167,8 +167,6 @@ mod tests {
 
     #[test]
     fn validate_aggregates_errors_from_all_sub_configs() {
-        // hostname with slash, empty package name, empty service name — three
-        // distinct sub-configs each contribute at least one error.
         let json = r#"{
             "system": {"hostname": "bad/host"},
             "packages": {"apt": [""]},

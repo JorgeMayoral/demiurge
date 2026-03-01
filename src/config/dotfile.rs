@@ -267,7 +267,6 @@ mod tests {
         let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let src_file = src_dir.path().join("file.txt");
         std::fs::write(&src_file, "new content").expect("temp dir is writable");
-        // pre-place a regular file at the destination
         std::fs::write(tgt_dir.path().join("file.txt"), "old content")
             .expect("temp dir is writable");
 
@@ -303,7 +302,6 @@ mod tests {
             .expect("source exists and target dir is empty");
         assert!(tgt_dir.path().join("file.txt").is_symlink());
 
-        // remove_symlink operates on the target directory
         let remove_dotfile = Dotfile {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().join("file.txt"),
@@ -324,7 +322,6 @@ mod tests {
             source: src_dir.path().to_path_buf(),
             target: tgt_dir.path().join("nonexistent"),
         };
-        // should not error
         dotfile.remove_symlink().expect("target path is valid");
     }
 }
