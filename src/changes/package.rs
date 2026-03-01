@@ -55,6 +55,10 @@ impl PackageChanges {
         Self(changes)
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.0.values().all(|c| c.install.is_empty() && c.remove.is_empty())
+    }
+
     pub fn apply(&self) -> Result<()> {
         let supported_package_managers = PackageManagers::default();
         for (pkg_manager, changes) in self.0.clone() {

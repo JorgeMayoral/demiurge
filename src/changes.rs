@@ -59,15 +59,23 @@ impl Display for Changes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let title = "CHANGES".green().bold().underline().to_string();
 
-        let system_changes = &self.system;
-        let package_changes = &self.package;
-        let dotfile_changes = &self.dotfile;
-        let service_changes = &self.service;
-        let user_changes = &self.user;
+        let sections: Vec<String> = [
+            (!self.system.is_empty()).then(|| self.system.to_string()),
+            (!self.package.is_empty()).then(|| self.package.to_string()),
+            (!self.dotfile.is_empty()).then(|| self.dotfile.to_string()),
+            (!self.service.is_empty()).then(|| self.service.to_string()),
+            (!self.user.is_empty()).then(|| self.user.to_string()),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
-        write!(
-            f,
-            "\n{title}\n{system_changes}\n\n{package_changes}\n\n{dotfile_changes}\n\n{service_changes}\n\n{user_changes}\n"
-        )
+        let body = if sections.is_empty() {
+            "No changes.".yellow().to_string()
+        } else {
+            sections.join("\n\n")
+        };
+
+        write!(f, "\n{title}\n{body}\n")
     }
 }

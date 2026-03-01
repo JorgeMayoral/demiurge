@@ -20,6 +20,10 @@ impl SystemChanges {
         Self { hostname }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.hostname.is_none()
+    }
+
     pub fn apply(&self) -> Result<()> {
         if let Some(hostname) = self.hostname.clone() {
             let current_hostname = duct::cmd!("hostname")

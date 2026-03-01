@@ -26,6 +26,10 @@ impl UsersChanges {
         Self(users_changes)
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.0.iter().all(|c| c.is_empty())
+    }
+
     pub fn apply(&self) -> Result<()> {
         for change in &self.0 {
             change.apply().context("apply user change")?;
@@ -60,6 +64,10 @@ impl UserChanges {
             add_groups: User::new(new_user_config.name(), groups_to_add),
             remove_groups: User::new(new_user_config.name(), groups_to_remove),
         }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.add_groups.groups().is_empty() && self.remove_groups.groups().is_empty()
     }
 
     pub fn apply(&self) -> Result<()> {

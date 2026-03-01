@@ -32,6 +32,10 @@ impl ServiceChanges {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.enable.services().is_empty() && self.disable.services().is_empty()
+    }
+
     pub fn apply(&self) -> Result<()> {
         for service in self.enable.services() {
             service

@@ -32,6 +32,10 @@ impl DotfileChanges {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.create.dotfiles().is_empty() && self.remove.dotfiles().is_empty()
+    }
+
     pub fn apply(&self, overwrite: bool) -> Result<()> {
         for dotfile in self.create.dotfiles() {
             dotfile.create_symlink(overwrite).with_context(|| {
