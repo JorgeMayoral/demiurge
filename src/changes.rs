@@ -43,11 +43,11 @@ impl Changes {
         log::info!("Applying package changes...");
         self.package.apply()?;
         log::info!("Applying dotfiles changes...");
-        let _ = self.dotfile.apply(overwrite_symlinks);
+        self.dotfile.apply(overwrite_symlinks)?;
         log::info!("Applying service changes...");
-        let _ = self.service.apply();
+        self.service.apply()?;
         log::info!("Applying users changes...");
-        let _ = self.user.apply();
+        self.user.apply()?;
 
         Ok(())
     }
