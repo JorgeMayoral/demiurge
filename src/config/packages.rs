@@ -32,3 +32,28 @@ impl Packages {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Packages;
+
+    #[test]
+    fn packages_persistence_round_trip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let packages: Packages =
+            serde_json::from_str(r#"{"paru": ["vim", "git"], "cargo": ["ripgrep"]}"#).unwrap();
+        packages.save_applied_config(dir.path()).unwrap();
+        let loaded = Packages::read_applied_config(dir.path()).unwrap();
+        assert_eq!(
+            loaded.get("paru").unwrap(),
+            vec!["vim".to_owned(), "git".to_owned()]
+        );
+        assert_eq!(loaded.get("cargo").unwrap(), vec!["ripgrep".to_owned()]);
+    }
+
+    #[test]
+    fn read_applied_config_returns_none_when_missing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        assert!(Packages::read_applied_config(dir.path()).is_none());
+    }
+}

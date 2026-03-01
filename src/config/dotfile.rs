@@ -110,3 +110,129 @@ impl Dotfile {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Dotfile, Dotfiles};
+
+    #[test]
+    fn dotfiles_persistence_round_trip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let dotfiles = Dotfiles::new(vec![
+            Dotfile {
+                source: "/dotfiles/nvim".into(),
+                target: "/home/user/.config/nvim".into(),
+            },
+            Dotfile {
+                source: "/dotfiles/zsh".into(),
+                target: "/home/user/.zshrc".into(),
+            },
+        ]);
+        dotfiles.save_applied_config(dir.path()).unwrap();
+        let loaded = Dotfiles::read_applied_config(dir.path()).unwrap();
+        assert_eq!(loaded.dotfiles().len(), 2);
+    }
+
+    #[test]
+    fn read_applied_config_returns_none_when_missing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        assert!(Dotfiles::read_applied_config(dir.path()).is_none());
+    }
+
+    #[test]
+    fn create_symlink_links_single_file() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_file = src_dir.path().join("file.txt");
+        std::fs::write(&src_file, "hello").unwrap();
+
+        let dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().to_path_buf(),
+        };
+        dotfile.create_symlink(false).unwrap();
+
+        let link = tgt_dir.path().join("file.txt");
+        assert!(
+            link.is_symlink(),
+            "expected a symlink at {}",
+            link.display()
+        );
+        assert_eq!(std::fs::read_to_string(&link).unwrap(), "hello");
+    }
+
+    #[test]
+    fn create_symlink_recurses_into_subdirectories() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        std::fs::create_dir(src_dir.path().join("sub")).unwrap();
+        std::fs::write(src_dir.path().join("root.txt"), "root").unwrap();
+        std::fs::write(src_dir.path().join("sub").join("nested.txt"), "nested").unwrap();
+
+        let dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().to_path_buf(),
+        };
+        dotfile.create_symlink(false).unwrap();
+
+        assert!(tgt_dir.path().join("root.txt").is_symlink());
+        assert!(tgt_dir.path().join("sub").join("nested.txt").is_symlink());
+    }
+
+    #[test]
+    fn create_symlink_with_overwrite_replaces_existing() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_file = src_dir.path().join("file.txt");
+        std::fs::write(&src_file, "new content").unwrap();
+        // pre-place a regular file at the destination
+        std::fs::write(tgt_dir.path().join("file.txt"), "old content").unwrap();
+
+        let dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().to_path_buf(),
+        };
+        dotfile.create_symlink(true).unwrap();
+
+        let link = tgt_dir.path().join("file.txt");
+        assert!(link.is_symlink());
+        assert_eq!(std::fs::read_to_string(&link).unwrap(), "new content");
+    }
+
+    #[test]
+    fn remove_symlink_deletes_link_and_leaves_source_intact() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let src_file = src_dir.path().join("file.txt");
+        std::fs::write(&src_file, "data").unwrap();
+
+        let dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().to_path_buf(),
+        };
+        dotfile.create_symlink(false).unwrap();
+        assert!(tgt_dir.path().join("file.txt").is_symlink());
+
+        // remove_symlink operates on the target directory
+        let remove_dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().join("file.txt"),
+        };
+        remove_dotfile.remove_symlink().unwrap();
+
+        assert!(!tgt_dir.path().join("file.txt").exists());
+        assert!(src_file.exists(), "source file must survive removal");
+    }
+
+    #[test]
+    fn remove_symlink_is_no_op_when_target_is_absent() {
+        let src_dir = tempfile::TempDir::new().unwrap();
+        let tgt_dir = tempfile::TempDir::new().unwrap();
+        let dotfile = Dotfile {
+            source: src_dir.path().to_path_buf(),
+            target: tgt_dir.path().join("nonexistent"),
+        };
+        // should not error
+        dotfile.remove_symlink().unwrap();
+    }
+}
