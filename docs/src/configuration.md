@@ -140,6 +140,18 @@ dotfiles: [
 
 When `source` is a directory, Demiurge recursively walks it and creates a symlink for each file at the corresponding path under `target`. Tilde (`~`) expansion is supported in both fields.
 
+## Validation
+
+Before applying any changes, `dmrg apply` validates the configuration and reports all violations together. Nothing is applied until the configuration passes validation.
+
+| Section    | Rule |
+|------------|------|
+| `system`   | `hostname` must not contain whitespace or `/`. An empty string is allowed and means "no change". |
+| `packages` | The package manager name and each package name must be non-empty. |
+| `services` | Each service name must be non-empty. |
+| `users`    | The user name and every group name must be non-empty. |
+| `dotfiles` | Both `source` and `target` must be non-empty. |
+
 ## Alternative formats
 
 If you prefer not to use TypeScript at runtime, you can export your configuration as JSON or YAML using `dmrg eval`, then apply it from a file or via stdin with `--from-json` or `--from-yaml`. See the [Commands](./commands.md) page for details.

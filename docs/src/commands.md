@@ -38,7 +38,7 @@ dmrg init --update-types
 
 ## `dmrg apply`
 
-Evaluates the configuration, computes the diff against the last applied state, and applies the changes. A confirmation prompt is shown before applying unless `--no-confirm` is passed.
+Evaluates the configuration, computes the diff against the last applied state, and applies the changes. A confirmation prompt is shown before applying unless `--no-confirm` is passed. The configuration is validated before any changes are applied, see [Configuration → Validation](./configuration.md#validation) for the rules.
 
 ```sh
 dmrg apply --name <NAME> [--file <FILE> | --stdin] [OPTIONS]
@@ -48,7 +48,7 @@ dmrg apply --name <NAME> [--file <FILE> | --stdin] [OPTIONS]
 |-----------------------|------------------------------------------------------------------------------------------------|
 | `-f, --file <FILE>`   | Path to the configuration file. Required unless `--stdin` is used.                            |
 | `-n, --name <NAME>`   | Name of the configuration to apply.                                                            |
-| `-d, --dry-run`       | Print the list of changes without applying them. Skips the confirmation prompt.                |
+| `-d, --dry-run`       | Print the list of changes without applying them. Sections with no pending changes are omitted from the output. Skips the confirmation prompt. |
 | `--no-confirm`        | Skip the confirmation prompt and apply immediately.                                            |
 | `--overwrite-symlink` | Allow overwriting already existing dotfile symlinks.                                           |
 | `--from-json`         | Parse the configuration as JSON (from file or stdin).                                          |
