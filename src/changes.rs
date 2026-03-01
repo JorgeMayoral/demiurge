@@ -29,11 +29,11 @@ pub struct Changes {
 impl Changes {
     pub fn new(new_config: &DemiurgeConfig, applied_config: &DemiurgeConfig) -> Self {
         Self {
-            system: SystemChanges::new(&new_config.system(), &applied_config.system()),
-            package: PackageChanges::new(&new_config.packages(), &applied_config.packages()),
-            dotfile: DotfileChanges::new(&new_config.dotfiles(), &applied_config.dotfiles()),
-            service: ServiceChanges::new(&new_config.services(), &applied_config.services()),
-            user: UsersChanges::new(&new_config.users(), &applied_config.users()),
+            system: SystemChanges::new(new_config.system(), applied_config.system()),
+            package: PackageChanges::new(new_config.packages(), applied_config.packages()),
+            dotfile: DotfileChanges::new(new_config.dotfiles(), applied_config.dotfiles()),
+            service: ServiceChanges::new(new_config.services(), applied_config.services()),
+            user: UsersChanges::new(new_config.users(), applied_config.users()),
         }
     }
 

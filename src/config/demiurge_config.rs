@@ -16,24 +16,24 @@ pub struct DemiurgeConfig {
 }
 
 impl DemiurgeConfig {
-    pub fn system(&self) -> System {
-        self.system.clone()
+    pub fn system(&self) -> &System {
+        &self.system
     }
 
-    pub fn packages(&self) -> Packages {
-        self.packages.clone()
+    pub fn packages(&self) -> &Packages {
+        &self.packages
     }
 
-    pub fn dotfiles(&self) -> Dotfiles {
-        self.dotfiles.clone()
+    pub fn dotfiles(&self) -> &Dotfiles {
+        &self.dotfiles
     }
 
-    pub fn services(&self) -> Services {
-        self.services.clone()
+    pub fn services(&self) -> &Services {
+        &self.services
     }
 
-    pub fn users(&self) -> Users {
-        self.users.clone()
+    pub fn users(&self) -> &Users {
+        &self.users
     }
 
     pub fn read_applied_config() -> Option<Self> {
