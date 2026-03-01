@@ -54,8 +54,8 @@ impl Dotfile {
     }
 
     pub fn create_symlink(&self, overwrite: bool) -> Result<()> {
-        let source_path = utils::path_tilde_expand(self.source()).canonicalize()?;
-        let target_path = utils::path_tilde_expand(self.target());
+        let source_path = utils::path_tilde_expand(self.source())?.canonicalize()?;
+        let target_path = utils::path_tilde_expand(self.target())?;
         if !source_path.exists() {
             let error_msg = format!(
                 "The source path \"{}\" doesn't exists.",
@@ -102,7 +102,7 @@ impl Dotfile {
     }
 
     pub fn remove_symlink(&self) -> Result<()> {
-        let target_path = utils::path_tilde_expand(self.target());
+        let target_path = utils::path_tilde_expand(self.target())?;
         if !target_path.exists() && !target_path.is_symlink() {
             return Ok(());
         }

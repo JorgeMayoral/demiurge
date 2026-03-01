@@ -17,7 +17,7 @@ impl SchemaArgs {
         let schema = schemars::schema_for!(Demiurge);
         let json_string = serde_json::to_string_pretty(&schema)?;
         if let Some(path) = self.output {
-            let expanded_path = utils::path_tilde_expand(path).canonicalize()?;
+            let expanded_path = utils::path_tilde_expand(path)?.canonicalize()?;
             let full_path = expanded_path.join("schema.json");
             let mut file = std::fs::File::create_new(full_path)?;
             file.write_all(json_string.as_bytes())?;

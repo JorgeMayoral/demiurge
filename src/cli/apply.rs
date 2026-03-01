@@ -58,7 +58,7 @@ impl ApplyArgs {
         let config = configs
             .get(&self.name)
             .context(format!("Configuration \"{}\" not found", self.name))?;
-        let applied_config = DemiurgeConfig::read_applied_config();
+        let applied_config = DemiurgeConfig::read_applied_config().unwrap_or_default();
         let changes = Changes::new(&config, &applied_config);
         if self.dry_run {
             println!("{changes}");

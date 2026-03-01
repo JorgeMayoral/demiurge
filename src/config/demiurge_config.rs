@@ -36,24 +36,24 @@ impl DemiurgeConfig {
         self.users.clone()
     }
 
-    pub fn read_applied_config() -> Self {
-        let data_path = Self::get_data_dir();
+    pub fn read_applied_config() -> Option<Self> {
+        let data_path = Self::get_data_dir().ok()?;
         let applied_system_config = System::read_applied_config(&data_path).unwrap_or_default();
         let applied_packages_config = Packages::read_applied_config(&data_path).unwrap_or_default();
         let applied_dotfiles_config = Dotfiles::read_applied_config(&data_path).unwrap_or_default();
         let applied_services_config = Services::read_applied_config(&data_path).unwrap_or_default();
         let applied_users_config = Users::read_applied_config(&data_path).unwrap_or_default();
-        Self {
+        Some(Self {
             system: applied_system_config,
             packages: applied_packages_config,
             dotfiles: applied_dotfiles_config,
             services: applied_services_config,
             users: applied_users_config,
-        }
+        })
     }
 
     pub fn save_applied_config(self) -> Result<()> {
-        let data_path = Self::get_data_dir();
+        let data_path = Self::get_data_dir()?;
         std::fs::create_dir_all(&data_path)?;
         log::info!("Saving applied configuration in {}", &data_path.display());
         self.system.save_applied_config(&data_path)?;
@@ -64,9 +64,10 @@ impl DemiurgeConfig {
         Ok(())
     }
 
-    fn get_data_dir() -> PathBuf {
-        let project_dir = directories::ProjectDirs::from("dev", "yorch", "demiurge").unwrap();
-        project_dir.data_dir().to_path_buf()
+    fn get_data_dir() -> Result<PathBuf> {
+        let project_dir = directories::ProjectDirs::from("dev", "yorch", "demiurge")
+            .ok_or(anyhow::anyhow!("Could not get project directory."))?;
+        Ok(project_dir.data_dir().to_path_buf())
     }
 }
 
