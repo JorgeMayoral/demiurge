@@ -22,19 +22,18 @@ impl SystemChanges {
 
     pub fn apply(&self) -> Result<()> {
         if let Some(hostname) = self.hostname.clone() {
-            let configured_hostname = hostname;
             let current_hostname = duct::cmd!("hostname")
                 .read()
                 .context("read current hostname")?;
 
-            if configured_hostname != current_hostname {
-                log::info!("Changing hostname from {current_hostname} to {configured_hostname}");
-                duct::cmd!("sudo", "hostname", &configured_hostname)
+            if hostname != current_hostname {
+                log::info!("Changing hostname from {current_hostname} to {hostname}");
+                duct::cmd!("sudo", "hostname", &hostname)
                     .run()
-                    .with_context(|| format!("set hostname to {configured_hostname}"))?;
+                    .with_context(|| format!("set hostname to {hostname}"))?;
             }
         } else {
-            log::info!("Hostname already configured.");
+            log::info!("No hostname change.");
         }
 
         Ok(())
