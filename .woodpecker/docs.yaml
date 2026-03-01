@@ -1,0 +1,26 @@
+when:
+  - event: push
+    branch: main
+
+steps:
+  - name: build
+    image: peaceiris/mdbook:latest
+    commands:
+      - mdbook build
+
+  - name: publish
+    image: alpine/git
+    environment:
+      - MDBOOK_OUTPUT: docs/book
+      - MAIL:
+          from_secret: mail
+      - CODEBERG_TOKEN:
+          from_secret: codeberg_token
+    commands:
+      - git config --global user.email $MAIL
+      - git config --global user.name "Woodpecker CI"
+      - git clone -b pages https://$CODEBERG_TOKEN@codeberg.org/$CI_REPO.git $CI_REPO_NAME
+      - cp -ar $MDBOOK_OUTPUT/. $CI_REPO_NAME/
+      - cd $CI_REPO_NAME
+      - git add .
+      - if ! git diff --cached --quiet; then git commit -m "Woodpecker CI ${CI_BUILD_CREATED}" && git push; fi
