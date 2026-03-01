@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-const CURRENT_PACKAGES_CONFIG_FILE_NAME: &str = "current_packages_config";
+use crate::config::CURRENT_PACKAGES_CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct Packages(HashMap<String, Vec<String>>);

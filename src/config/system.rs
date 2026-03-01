@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-const CURRENT_SYSTEM_CONFIG_FILE_NAME: &str = "current_system_config";
+use crate::config::CURRENT_SYSTEM_CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct System {

@@ -19,6 +19,12 @@ mod service;
 mod system;
 mod user;
 
+pub(super) const CURRENT_DOTFILES_CONFIG_FILE_NAME: &str = "current_dotfiles_config";
+pub(super) const CURRENT_PACKAGES_CONFIG_FILE_NAME: &str = "current_packages_config";
+pub(super) const CURRENT_SERVICES_CONFIG_FILE_NAME: &str = "current_services_config";
+pub(super) const CURRENT_SYSTEM_CONFIG_FILE_NAME: &str = "current_system_config";
+pub(super) const CURRENT_USERS_CONFIG_FILE_NAME: &str = "current_users_config";
+
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct Demiurge(HashMap<String, DemiurgeConfig>);
 

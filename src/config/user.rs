@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-const CURRENT_USERS_CONFIG_FILE_NAME: &str = "current_users_config";
+use crate::config::CURRENT_USERS_CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct Users(Vec<User>);
@@ -120,7 +120,11 @@ mod tests {
         users.save_applied_config(dir.path()).unwrap();
         let loaded = Users::read_applied_config(dir.path()).unwrap();
         assert_eq!(loaded.users().len(), 2);
-        let alice = loaded.users().into_iter().find(|u| u.name() == "alice").unwrap();
+        let alice = loaded
+            .users()
+            .into_iter()
+            .find(|u| u.name() == "alice")
+            .unwrap();
         assert!(alice.groups().contains(&"wheel".to_owned()));
         assert!(alice.groups().contains(&"docker".to_owned()));
     }

@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-const CURRENT_SERVICES_CONFIG_FILE_NAME: &str = "current_services_config";
+use crate::config::CURRENT_SERVICES_CONFIG_FILE_NAME;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct Services(Vec<Service>);
@@ -74,7 +74,10 @@ mod tests {
     #[test]
     fn services_persistence_round_trip() {
         let dir = tempfile::TempDir::new().unwrap();
-        let services = Services::new(vec![Service("nginx".to_owned()), Service("docker".to_owned())]);
+        let services = Services::new(vec![
+            Service("nginx".to_owned()),
+            Service("docker".to_owned()),
+        ]);
         services.save_applied_config(dir.path()).unwrap();
         let loaded = Services::read_applied_config(dir.path()).unwrap();
         let names: Vec<String> = loaded.services().iter().map(|s| s.service()).collect();
