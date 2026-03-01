@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use anyhow::Result;
 use owo_colors::OwoColorize;
 
 use crate::config::{Dotfile, Dotfiles};
@@ -31,16 +32,16 @@ impl DotfileChanges {
         }
     }
 
-    pub fn apply(&self, overwrite: bool) {
-        self.create
-            .dotfiles()
-            .iter()
-            .for_each(|dotfile| dotfile.create_symlink(overwrite).unwrap());
+    pub fn apply(&self, overwrite: bool) -> Result<()> {
+        for dotfile in self.create.dotfiles() {
+            dotfile.create_symlink(overwrite)?;
+        }
 
-        self.remove
-            .dotfiles()
-            .iter()
-            .for_each(|dotfile| dotfile.remove_symlink().unwrap());
+        for dotfile in self.remove.dotfiles() {
+            dotfile.remove_symlink()?;
+        }
+
+        Ok(())
     }
 }
 
