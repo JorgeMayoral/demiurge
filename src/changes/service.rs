@@ -81,3 +81,51 @@ impl Display for ServiceChanges {
         write!(f, "{text}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ServiceChanges;
+    use crate::config::Services;
+
+    fn svcs(json: &str) -> Services {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn new_service_goes_to_enable_set() {
+        let new = svcs(r#"["nginx", "docker"]"#);
+        let applied = svcs(r#"["nginx"]"#);
+        let changes = ServiceChanges::new(&new, &applied);
+        let enable_names: Vec<String> = changes
+            .enable
+            .services()
+            .iter()
+            .map(|s| s.service())
+            .collect();
+        assert!(enable_names.contains(&"docker".to_owned()));
+        assert!(changes.disable.services().is_empty());
+    }
+
+    #[test]
+    fn removed_service_goes_to_disable_set() {
+        let new = svcs(r#"["nginx"]"#);
+        let applied = svcs(r#"["nginx", "docker"]"#);
+        let changes = ServiceChanges::new(&new, &applied);
+        let disable_names: Vec<String> = changes
+            .disable
+            .services()
+            .iter()
+            .map(|s| s.service())
+            .collect();
+        assert!(disable_names.contains(&"docker".to_owned()));
+        assert!(changes.enable.services().is_empty());
+    }
+
+    #[test]
+    fn unchanged_services_produce_empty_sets() {
+        let svcs_config = svcs(r#"["nginx", "docker"]"#);
+        let changes = ServiceChanges::new(&svcs_config, &svcs_config);
+        assert!(changes.enable.services().is_empty());
+        assert!(changes.disable.services().is_empty());
+    }
+}

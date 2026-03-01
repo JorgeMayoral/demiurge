@@ -48,3 +48,28 @@ impl Display for SystemChanges {
         write!(f, "{text}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SystemChanges;
+    use crate::config::System;
+
+    fn make_system(hostname: &str) -> System {
+        serde_json::from_value(serde_json::json!({ "hostname": hostname })).unwrap()
+    }
+
+    #[test]
+    fn hostname_unchanged_produces_no_change() {
+        let system = make_system("myhost");
+        let changes = SystemChanges::new(&system, &system);
+        assert!(changes.hostname.is_none());
+    }
+
+    #[test]
+    fn hostname_changed_captures_new_value() {
+        let new_system = make_system("newhost");
+        let applied_system = make_system("oldhost");
+        let changes = SystemChanges::new(&new_system, &applied_system);
+        assert_eq!(changes.hostname, Some("newhost".to_owned()));
+    }
+}

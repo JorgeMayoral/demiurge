@@ -120,3 +120,73 @@ impl Display for UserChanges {
         write!(f, "{text}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{UserChanges, UsersChanges};
+    use crate::config::{User, Users};
+
+    fn make_user(name: &str, groups: &[&str]) -> User {
+        User::new(
+            name.to_owned(),
+            groups.iter().map(|g| (*g).to_owned()).collect(),
+        )
+    }
+
+    fn make_users(json: &str) -> Users {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn new_group_goes_to_add_set() {
+        let new_user = make_user("alice", &["wheel", "docker"]);
+        let applied_user = make_user("alice", &["wheel"]);
+        let changes = UserChanges::new(&new_user, &applied_user);
+        assert!(changes.add_groups.groups().contains(&"docker".to_owned()));
+        assert!(changes.remove_groups.groups().is_empty());
+    }
+
+    #[test]
+    fn removed_group_goes_to_remove_set() {
+        let new_user = make_user("alice", &["wheel"]);
+        let applied_user = make_user("alice", &["wheel", "docker"]);
+        let changes = UserChanges::new(&new_user, &applied_user);
+        assert!(
+            changes
+                .remove_groups
+                .groups()
+                .contains(&"docker".to_owned())
+        );
+        assert!(changes.add_groups.groups().is_empty());
+    }
+
+    #[test]
+    fn unchanged_groups_produce_empty_sets() {
+        let user = make_user("alice", &["wheel", "docker"]);
+        let changes = UserChanges::new(&user, &user);
+        assert!(changes.add_groups.groups().is_empty());
+        assert!(changes.remove_groups.groups().is_empty());
+    }
+
+    #[test]
+    fn new_user_puts_all_groups_in_add_set() {
+        let new_users = make_users(r#"[{"name": "alice", "groups": ["wheel", "docker"]}]"#);
+        let applied_users = make_users(r#"[]"#);
+        let changes = UsersChanges::new(&new_users, &applied_users);
+        assert_eq!(changes.0.len(), 1);
+        let user_changes = &changes.0[0];
+        assert!(
+            user_changes
+                .add_groups
+                .groups()
+                .contains(&"wheel".to_owned())
+        );
+        assert!(
+            user_changes
+                .add_groups
+                .groups()
+                .contains(&"docker".to_owned())
+        );
+        assert!(user_changes.remove_groups.groups().is_empty());
+    }
+}

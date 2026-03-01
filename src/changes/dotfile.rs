@@ -91,3 +91,47 @@ impl Display for DotfileChanges {
         write!(f, "{text}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::DotfileChanges;
+    use crate::config::Dotfiles;
+
+    fn dots(json: &str) -> Dotfiles {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn new_dotfile_goes_to_create_set() {
+        let new = dots(r#"[{"source": "/dotfiles/nvim", "target": "/home/user/.config/nvim"}]"#);
+        let applied = dots(r#"[]"#);
+        let changes = DotfileChanges::new(&new, &applied);
+        assert_eq!(changes.create.dotfiles().len(), 1);
+        assert_eq!(
+            changes.create.dotfiles()[0].source(),
+            PathBuf::from("/dotfiles/nvim")
+        );
+        assert!(changes.remove.dotfiles().is_empty());
+    }
+
+    #[test]
+    fn removed_dotfile_goes_to_remove_set() {
+        let new = dots(r#"[]"#);
+        let applied =
+            dots(r#"[{"source": "/dotfiles/nvim", "target": "/home/user/.config/nvim"}]"#);
+        let changes = DotfileChanges::new(&new, &applied);
+        assert_eq!(changes.remove.dotfiles().len(), 1);
+        assert!(changes.create.dotfiles().is_empty());
+    }
+
+    #[test]
+    fn unchanged_dotfiles_produce_empty_sets() {
+        let dots_config =
+            dots(r#"[{"source": "/dotfiles/nvim", "target": "/home/user/.config/nvim"}]"#);
+        let changes = DotfileChanges::new(&dots_config, &dots_config);
+        assert!(changes.create.dotfiles().is_empty());
+        assert!(changes.remove.dotfiles().is_empty());
+    }
+}

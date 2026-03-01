@@ -173,3 +173,53 @@ impl Default for PackageManagers {
         Self(list)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::PackageChanges;
+    use crate::config::Packages;
+
+    fn pkgs(json: &str) -> Packages {
+        serde_json::from_str(json).unwrap()
+    }
+
+    #[test]
+    fn new_package_goes_to_install_set() {
+        let new = pkgs(r#"{"paru": ["vim", "git"]}"#);
+        let applied = pkgs(r#"{"paru": ["vim"]}"#);
+        let changes = PackageChanges::new(&new, &applied);
+        let paru = changes.0.get("paru").unwrap();
+        assert!(paru.install.contains(&"git".to_owned()));
+        assert!(paru.remove.is_empty());
+    }
+
+    #[test]
+    fn removed_package_goes_to_remove_set() {
+        let new = pkgs(r#"{"paru": ["vim"]}"#);
+        let applied = pkgs(r#"{"paru": ["vim", "git"]}"#);
+        let changes = PackageChanges::new(&new, &applied);
+        let paru = changes.0.get("paru").unwrap();
+        assert!(paru.remove.contains(&"git".to_owned()));
+        assert!(paru.install.is_empty());
+    }
+
+    #[test]
+    fn unchanged_packages_produce_empty_sets() {
+        let pkgs_config = pkgs(r#"{"paru": ["vim", "git"]}"#);
+        let changes = PackageChanges::new(&pkgs_config, &pkgs_config);
+        let paru = changes.0.get("paru").unwrap();
+        assert!(paru.install.is_empty());
+        assert!(paru.remove.is_empty());
+    }
+
+    #[test]
+    fn new_package_manager_installs_all_its_packages() {
+        let new = pkgs(r#"{"cargo": ["ripgrep", "fd"]}"#);
+        let applied = pkgs(r#"{}"#);
+        let changes = PackageChanges::new(&new, &applied);
+        let cargo = changes.0.get("cargo").unwrap();
+        assert!(cargo.install.contains(&"ripgrep".to_owned()));
+        assert!(cargo.install.contains(&"fd".to_owned()));
+        assert!(cargo.remove.is_empty());
+    }
+}
