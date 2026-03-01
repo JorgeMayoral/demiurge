@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
 use crate::config::Packages;
@@ -73,7 +73,9 @@ impl PackageChanges {
                         let mut args = args;
                         log::info!("Removing packages: {}", pkgs_to_remove.join(" "));
                         args.extend(pkgs_to_remove);
-                        duct::cmd(&pkg_manager, args).run()?;
+                        duct::cmd(&pkg_manager, args)
+                            .run()
+                            .with_context(|| format!("remove packages via {pkg_manager}"))?;
                     }
                 }
             }
@@ -91,7 +93,9 @@ impl PackageChanges {
                         let mut args = args;
                         log::info!("Installing packages: {}", pkgs_to_install.join(" "));
                         args.extend(pkgs_to_install);
-                        duct::cmd(&pkg_manager, args).run()?;
+                        duct::cmd(&pkg_manager, args)
+                            .run()
+                            .with_context(|| format!("install packages via {pkg_manager}"))?;
                     }
                 }
             }

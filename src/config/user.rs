@@ -1,6 +1,6 @@
 use std::{io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -22,9 +22,12 @@ impl Users {
 
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
-            std::fs::File::create(data_path.join(CURRENT_USERS_CONFIG_FILE_NAME))?;
-        let current_config_data = bitcode::serialize(&self)?;
-        current_config_file.write_all(&current_config_data)?;
+            std::fs::File::create(data_path.join(CURRENT_USERS_CONFIG_FILE_NAME))
+                .context("create users config file")?;
+        let current_config_data = bitcode::serialize(&self).context("serialize users config")?;
+        current_config_file
+            .write_all(&current_config_data)
+            .context("write users config file")?;
         Ok(())
     }
 }
@@ -51,7 +54,7 @@ impl User {
     pub fn add_groups(&self) -> Result<()> {
         let user = self.name();
         let groups = self.groups();
-        Self::create_groups_if_needed(&groups)?;
+        Self::create_groups_if_needed(&groups).context("create missing groups")?;
         let groups_string = groups.join(",");
         duct::cmd!(
             "sudo",
@@ -61,12 +64,15 @@ impl User {
             &groups_string,
             &user
         )
-        .run()?;
+        .run()
+        .with_context(|| format!("add user {user} to groups {groups_string}"))?;
         Ok(())
     }
 
     fn create_groups_if_needed(groups: &[String]) -> Result<()> {
-        let existing_groups_output = duct::cmd!("getent", "group").read()?;
+        let existing_groups_output = duct::cmd!("getent", "group")
+            .read()
+            .context("read system groups")?;
         let existing_groups = existing_groups_output
             .lines()
             .filter_map(|line| line.split(':').next())
@@ -74,7 +80,9 @@ impl User {
             .collect::<Vec<String>>();
         for group in groups {
             if !existing_groups.contains(group) {
-                duct::cmd!("sudo", "groupadd", group).run()?;
+                duct::cmd!("sudo", "groupadd", group)
+                    .run()
+                    .with_context(|| format!("create group {group}"))?;
             }
         }
         Ok(())
@@ -92,7 +100,8 @@ impl User {
             &groups_string,
             &user
         )
-        .run()?;
+        .run()
+        .with_context(|| format!("remove user {user} from groups {groups_string}"))?;
         Ok(())
     }
 }

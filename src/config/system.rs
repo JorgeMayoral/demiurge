@@ -1,6 +1,6 @@
 use std::{io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -24,9 +24,12 @@ impl System {
 
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
-            std::fs::File::create(data_path.join(CURRENT_SYSTEM_CONFIG_FILE_NAME))?;
-        let current_config_data = bitcode::serialize(&self)?;
-        current_config_file.write_all(&current_config_data)?;
+            std::fs::File::create(data_path.join(CURRENT_SYSTEM_CONFIG_FILE_NAME))
+                .context("create system config file")?;
+        let current_config_data = bitcode::serialize(&self).context("serialize system config")?;
+        current_config_file
+            .write_all(&current_config_data)
+            .context("write system config file")?;
         Ok(())
     }
 }

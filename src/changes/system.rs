@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
 use crate::config::System;
@@ -23,11 +23,15 @@ impl SystemChanges {
     pub fn apply(&self) -> Result<()> {
         if let Some(hostname) = self.hostname.clone() {
             let configured_hostname = hostname;
-            let current_hostname = duct::cmd!("hostname").read()?;
+            let current_hostname = duct::cmd!("hostname")
+                .read()
+                .context("read current hostname")?;
 
             if configured_hostname != current_hostname {
                 log::info!("Changing hostname from {current_hostname} to {configured_hostname}");
-                duct::cmd!("sudo", "hostname", configured_hostname).run()?;
+                duct::cmd!("sudo", "hostname", &configured_hostname)
+                    .run()
+                    .with_context(|| format!("set hostname to {configured_hostname}"))?;
             }
         } else {
             log::info!("Hostname already configured.");

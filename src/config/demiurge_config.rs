@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -53,14 +53,24 @@ impl DemiurgeConfig {
     }
 
     pub fn save_applied_config(self) -> Result<()> {
-        let data_path = Self::get_data_dir()?;
-        std::fs::create_dir_all(&data_path)?;
+        let data_path = Self::get_data_dir().context("resolve data directory")?;
+        std::fs::create_dir_all(&data_path).context("create data directory")?;
         log::info!("Saving applied configuration in {}", &data_path.display());
-        self.system.save_applied_config(&data_path)?;
-        self.packages.save_applied_config(&data_path)?;
-        self.dotfiles.save_applied_config(&data_path)?;
-        self.services.save_applied_config(&data_path)?;
-        self.users.save_applied_config(&data_path)?;
+        self.system
+            .save_applied_config(&data_path)
+            .context("save system applied config")?;
+        self.packages
+            .save_applied_config(&data_path)
+            .context("save packages applied config")?;
+        self.dotfiles
+            .save_applied_config(&data_path)
+            .context("save dotfiles applied config")?;
+        self.services
+            .save_applied_config(&data_path)
+            .context("save services applied config")?;
+        self.users
+            .save_applied_config(&data_path)
+            .context("save users applied config")?;
         Ok(())
     }
 

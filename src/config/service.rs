@@ -1,6 +1,6 @@
 use std::{io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -26,9 +26,12 @@ impl Services {
 
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
-            std::fs::File::create(data_path.join(CURRENT_SERVICES_CONFIG_FILE_NAME))?;
-        let current_config_data = bitcode::serialize(&self)?;
-        current_config_file.write_all(&current_config_data)?;
+            std::fs::File::create(data_path.join(CURRENT_SERVICES_CONFIG_FILE_NAME))
+                .context("create services config file")?;
+        let current_config_data = bitcode::serialize(&self).context("serialize services config")?;
+        current_config_file
+            .write_all(&current_config_data)
+            .context("write services config file")?;
         Ok(())
     }
 }
@@ -43,15 +46,23 @@ impl Service {
 
     pub fn enable(&self) -> Result<()> {
         let service = self.0.clone();
-        duct::cmd!("sudo", "systemctl", "start", &service).run()?;
-        duct::cmd!("sudo", "systemctl", "enable", &service).run()?;
+        duct::cmd!("sudo", "systemctl", "start", &service)
+            .run()
+            .with_context(|| format!("start service {service}"))?;
+        duct::cmd!("sudo", "systemctl", "enable", &service)
+            .run()
+            .with_context(|| format!("enable service {service}"))?;
         Ok(())
     }
 
     pub fn disable(&self) -> Result<()> {
         let service = self.0.clone();
-        duct::cmd!("sudo", "systemctl", "stop", &service).run()?;
-        duct::cmd!("sudo", "systemctl", "disable", &service).run()?;
+        duct::cmd!("sudo", "systemctl", "stop", &service)
+            .run()
+            .with_context(|| format!("stop service {service}"))?;
+        duct::cmd!("sudo", "systemctl", "disable", &service)
+            .run()
+            .with_context(|| format!("disable service {service}"))?;
         Ok(())
     }
 }

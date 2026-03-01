@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 
 use crate::config::Demiurge;
@@ -20,12 +20,14 @@ pub struct EvalArgs {
 
 impl EvalArgs {
     pub fn run(self) -> Result<()> {
-        let config = Demiurge::from_file(self.file)?;
+        let config = Demiurge::from_file(self.file).context("load config file")?;
         if self.json {
-            let json_string = serde_json::to_string_pretty(&config)?;
+            let json_string =
+                serde_json::to_string_pretty(&config).context("serialize config to JSON")?;
             println!("{json_string}");
         } else if self.yaml {
-            let yaml_string = serde_norway::to_string(&config)?;
+            let yaml_string =
+                serde_norway::to_string(&config).context("serialize config to YAML")?;
             println!("{yaml_string}");
         } else {
             println!("{config:#?}");

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
 use crate::config::{User, Users};
@@ -28,7 +28,7 @@ impl UsersChanges {
 
     pub fn apply(&self) -> Result<()> {
         for change in &self.0 {
-            change.apply()?;
+            change.apply().context("apply user change")?;
         }
 
         Ok(())
@@ -64,11 +64,13 @@ impl UserChanges {
 
     pub fn apply(&self) -> Result<()> {
         if !self.add_groups.groups().is_empty() {
-            self.add_groups.add_groups()?;
+            self.add_groups.add_groups().context("add user groups")?;
         }
 
         if !self.remove_groups.groups().is_empty() {
-            self.remove_groups.remove_groups()?;
+            self.remove_groups
+                .remove_groups()
+                .context("remove user groups")?;
         }
 
         Ok(())

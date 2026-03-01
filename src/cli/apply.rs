@@ -47,13 +47,16 @@ pub struct FromGroup {
 impl ApplyArgs {
     pub fn run(self) -> Result<()> {
         let configs: Demiurge = if self.from_group.from_json {
-            let data = Self::read_static_config(self.stdin, self.file)?;
-            serde_json::from_str(&data)?
+            let data = Self::read_static_config(self.stdin, self.file)
+                .context("read static config")?;
+            serde_json::from_str(&data).context("parse JSON config")?
         } else if self.from_group.from_yaml {
-            let data = Self::read_static_config(self.stdin, self.file)?;
-            serde_norway::from_str(&data)?
+            let data = Self::read_static_config(self.stdin, self.file)
+                .context("read static config")?;
+            serde_norway::from_str(&data).context("parse YAML config")?
         } else {
-            Demiurge::from_file(self.file.expect("Should be required by clap in this case"))?
+            Demiurge::from_file(self.file.expect("Should be required by clap in this case"))
+                .context("load config file")?
         };
         let config = configs
             .get(&self.name)
@@ -69,11 +72,14 @@ impl ApplyArgs {
                 inquire::Confirm::new("Do you want to apply the changes?")
                 .with_default(false)
                 .with_help_message("This will make changes to your system. You can check what changes will be made with the --dry-run flag.")
-                .prompt()?
+                .prompt()
+                .context("prompt for apply confirmation")?
             };
             if apply {
-                changes.apply(self.overwrite_symlink)?;
-                config.save_applied_config()?;
+                changes
+                    .apply(self.overwrite_symlink)
+                    .context("apply changes")?;
+                config.save_applied_config().context("save applied config")?;
             } else {
                 log::error!("Apply operation canceled. Exiting.");
                 std::process::exit(1);
@@ -86,13 +92,16 @@ impl ApplyArgs {
     fn read_static_config(from_stdin: bool, file: Option<PathBuf>) -> Result<String> {
         if from_stdin {
             let mut buffer = String::new();
-            std::io::stdin().lock().read_to_string(&mut buffer)?;
+            std::io::stdin()
+                .lock()
+                .read_to_string(&mut buffer)
+                .context("read config from stdin")?;
             Ok(buffer)
         } else {
             let path = file.context(
                 "A path to the config file should be provided when not reading from stdin.",
             )?;
-            let data = std::fs::read_to_string(path)?;
+            let data = std::fs::read_to_string(path).context("read config file")?;
             Ok(data)
         }
     }

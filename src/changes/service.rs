@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
 use crate::config::{Service, Services};
@@ -34,11 +34,15 @@ impl ServiceChanges {
 
     pub fn apply(&self) -> Result<()> {
         for service in self.enable.services() {
-            service.enable()?;
+            service
+                .enable()
+                .with_context(|| format!("enable service {}", service.service()))?;
         }
 
         for service in self.disable.services() {
-            service.disable()?;
+            service
+                .disable()
+                .with_context(|| format!("disable service {}", service.service()))?;
         }
 
         Ok(())

@@ -31,9 +31,12 @@ impl Dotfiles {
 
     pub fn save_applied_config(self, data_path: &Path) -> Result<()> {
         let mut current_config_file =
-            std::fs::File::create(data_path.join(CURRENT_DOTFILES_CONFIG_FILE_NAME))?;
-        let current_config_data = bitcode::serialize(&self)?;
-        current_config_file.write_all(&current_config_data)?;
+            std::fs::File::create(data_path.join(CURRENT_DOTFILES_CONFIG_FILE_NAME))
+                .context("create dotfiles config file")?;
+        let current_config_data = bitcode::serialize(&self).context("serialize dotfiles config")?;
+        current_config_file
+            .write_all(&current_config_data)
+            .context("write dotfiles config file")?;
         Ok(())
     }
 }
@@ -54,8 +57,12 @@ impl Dotfile {
     }
 
     pub fn create_symlink(&self, overwrite: bool) -> Result<()> {
-        let source_path = utils::path_tilde_expand(self.source())?.canonicalize()?;
-        let target_path = utils::path_tilde_expand(self.target())?;
+        let source_path = utils::path_tilde_expand(self.source())
+            .context("expand source dotfile path")?
+            .canonicalize()
+            .context("canonicalize source dotfile path")?;
+        let target_path =
+            utils::path_tilde_expand(self.target()).context("expand target dotfile path")?;
         if !source_path.exists() {
             let error_msg = format!(
                 "The source path \"{}\" doesn't exists.",
@@ -65,12 +72,14 @@ impl Dotfile {
             return Err(anyhow::anyhow!(error_msg));
         }
         for entry in walkdir::WalkDir::new(&source_path) {
-            let entry = entry?;
+            let entry = entry.context("read directory entry")?;
             let entry_path = entry.path();
             if entry_path.is_dir() {
                 continue;
             }
-            let relative_path = entry_path.strip_prefix(&source_path)?;
+            let relative_path = entry_path
+                .strip_prefix(&source_path)
+                .context("compute relative dotfile path")?;
             let destination_path = target_path.join(relative_path);
             if destination_path.exists() || destination_path.is_symlink() {
                 if !overwrite {
@@ -83,15 +92,24 @@ impl Dotfile {
                 }
                 log::warn!("Removing {}", destination_path.display());
                 if destination_path.is_dir() && !destination_path.is_symlink() {
-                    std::fs::remove_dir_all(&destination_path)?;
+                    std::fs::remove_dir_all(&destination_path)
+                        .context("remove existing directory at symlink destination")?;
                 } else {
-                    std::fs::remove_file(&destination_path)?;
+                    std::fs::remove_file(&destination_path)
+                        .context("remove existing file at symlink destination")?;
                 }
             }
             if let Some(parent_dir) = destination_path.parent() {
-                std::fs::create_dir_all(parent_dir)?;
+                std::fs::create_dir_all(parent_dir)
+                    .context("create parent directories for symlink target")?;
             }
-            std::os::unix::fs::symlink(entry_path, &destination_path)?;
+            std::os::unix::fs::symlink(entry_path, &destination_path).with_context(|| {
+                format!(
+                    "create symlink from \"{}\" to \"{}\"",
+                    entry_path.display(),
+                    destination_path.display()
+                )
+            })?;
             log::info!(
                 "Symlink created from \"{}\" to \"{}\"",
                 entry_path.display(),
@@ -102,7 +120,8 @@ impl Dotfile {
     }
 
     pub fn remove_symlink(&self) -> Result<()> {
-        let target_path = utils::path_tilde_expand(self.target())?;
+        let target_path = utils::path_tilde_expand(self.target())
+            .context("expand target dotfile path for removal")?;
         if !target_path.exists() && !target_path.is_symlink() {
             return Ok(());
         }

@@ -24,7 +24,7 @@ pub struct Demiurge(HashMap<String, DemiurgeConfig>);
 
 impl Demiurge {
     pub fn from_file(file: PathBuf) -> Result<Self> {
-        let module = Module::load(file)?;
+        let module = Module::load(file).context("load config module")?;
         Runtime::execute_module(&module, vec![], RuntimeOptions::default(), &())
             .context("Failed to execute config module")
     }

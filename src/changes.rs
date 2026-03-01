@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
 use crate::{
@@ -39,15 +39,17 @@ impl Changes {
 
     pub fn apply(&self, overwrite_symlinks: bool) -> Result<()> {
         log::info!("Applying system changes...");
-        self.system.apply()?;
+        self.system.apply().context("apply system changes")?;
         log::info!("Applying package changes...");
-        self.package.apply()?;
+        self.package.apply().context("apply package changes")?;
         log::info!("Applying dotfiles changes...");
-        self.dotfile.apply(overwrite_symlinks)?;
+        self.dotfile
+            .apply(overwrite_symlinks)
+            .context("apply dotfile changes")?;
         log::info!("Applying service changes...");
-        self.service.apply()?;
+        self.service.apply().context("apply service changes")?;
         log::info!("Applying users changes...");
-        self.user.apply()?;
+        self.user.apply().context("apply user changes")?;
 
         Ok(())
     }
