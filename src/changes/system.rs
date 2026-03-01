@@ -62,7 +62,8 @@ mod tests {
     use crate::config::System;
 
     fn make_system(hostname: &str) -> System {
-        serde_json::from_value(serde_json::json!({ "hostname": hostname })).expect("value was just parsed from valid JSON")
+        serde_json::from_value(serde_json::json!({ "hostname": hostname }))
+            .expect("value was just parsed from valid JSON")
     }
 
     #[test]
@@ -71,13 +72,6 @@ mod tests {
         let changes = SystemChanges::new(&system, &system);
         assert!(changes.hostname.is_none());
         assert!(changes.apply().is_ok());
-    }
-
-    #[test]
-    fn hostname_unchanged_produces_no_change() {
-        let system = make_system("myhost");
-        let changes = SystemChanges::new(&system, &system);
-        assert!(changes.hostname.is_none());
     }
 
     #[test]

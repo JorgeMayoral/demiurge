@@ -57,14 +57,15 @@ mod tests {
 
     #[test]
     fn validate_valid_packages_is_ok() {
-        let pkgs: Packages =
-            serde_json::from_str(r#"{"apt": ["vim", "git"]}"#).expect("literal is well-formed JSON");
+        let pkgs: Packages = serde_json::from_str(r#"{"apt": ["vim", "git"]}"#)
+            .expect("literal is well-formed JSON");
         assert!(pkgs.validate().is_empty());
     }
 
     #[test]
     fn validate_empty_package_manager_name_is_invalid() {
-        let pkgs: Packages = serde_json::from_str(r#"{"": ["vim"]}"#).expect("literal is well-formed JSON");
+        let pkgs: Packages =
+            serde_json::from_str(r#"{"": ["vim"]}"#).expect("literal is well-formed JSON");
         let errors = pkgs.validate();
         assert_eq!(errors.len(), 1);
         assert!(errors[0].contains("package manager name"));
@@ -72,7 +73,8 @@ mod tests {
 
     #[test]
     fn validate_empty_package_name_is_invalid() {
-        let pkgs: Packages = serde_json::from_str(r#"{"apt": ["vim", ""]}"#).expect("literal is well-formed JSON");
+        let pkgs: Packages =
+            serde_json::from_str(r#"{"apt": ["vim", ""]}"#).expect("literal is well-formed JSON");
         let errors = pkgs.validate();
         assert_eq!(errors.len(), 1);
         assert!(errors[0].contains("package name"));
@@ -82,14 +84,22 @@ mod tests {
     fn packages_persistence_round_trip() {
         let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         let packages: Packages =
-            serde_json::from_str(r#"{"paru": ["vim", "git"], "cargo": ["ripgrep"]}"#).expect("literal is well-formed JSON");
-        packages.save_applied_config(dir.path()).expect("temp dir is writable");
+            serde_json::from_str(r#"{"paru": ["vim", "git"], "cargo": ["ripgrep"]}"#)
+                .expect("literal is well-formed JSON");
+        packages
+            .save_applied_config(dir.path())
+            .expect("temp dir is writable");
         let loaded = Packages::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(
             loaded.get("paru").expect("\"paru\" key was just inserted"),
             vec!["vim".to_owned(), "git".to_owned()]
         );
-        assert_eq!(loaded.get("cargo").expect("\"cargo\" key was just inserted"), vec!["ripgrep".to_owned()]);
+        assert_eq!(
+            loaded
+                .get("cargo")
+                .expect("\"cargo\" key was just inserted"),
+            vec!["ripgrep".to_owned()]
+        );
     }
 
     #[test]

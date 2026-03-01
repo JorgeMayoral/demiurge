@@ -47,12 +47,12 @@ pub struct FromGroup {
 impl ApplyArgs {
     pub fn run(self) -> Result<()> {
         let configs: Demiurge = if self.from_group.from_json {
-            let data = Self::read_static_config(self.stdin, self.file)
-                .context("read static config")?;
+            let data =
+                Self::read_static_config(self.stdin, self.file).context("read static config")?;
             serde_json::from_str(&data).context("parse JSON config")?
         } else if self.from_group.from_yaml {
-            let data = Self::read_static_config(self.stdin, self.file)
-                .context("read static config")?;
+            let data =
+                Self::read_static_config(self.stdin, self.file).context("read static config")?;
             serde_norway::from_str(&data).context("parse YAML config")?
         } else {
             Demiurge::from_file(self.file.expect("Should be required by clap in this case"))
@@ -80,7 +80,9 @@ impl ApplyArgs {
                 changes
                     .apply(self.overwrite_symlink)
                     .context("apply changes")?;
-                config.save_applied_config().context("save applied config")?;
+                config
+                    .save_applied_config()
+                    .context("save applied config")?;
             } else {
                 log::error!("Apply operation canceled. Exiting.");
                 std::process::exit(1);

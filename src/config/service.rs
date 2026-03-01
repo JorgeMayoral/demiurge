@@ -100,7 +100,9 @@ mod tests {
             Service("nginx".to_owned()),
             Service("docker".to_owned()),
         ]);
-        services.save_applied_config(dir.path()).expect("temp dir is writable");
+        services
+            .save_applied_config(dir.path())
+            .expect("temp dir is writable");
         let loaded = Services::read_applied_config(dir.path()).expect("config was just saved");
         let names: Vec<String> = loaded.services().iter().map(|s| s.service()).collect();
         assert!(names.contains(&"nginx".to_owned()));

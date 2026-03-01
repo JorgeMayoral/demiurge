@@ -114,10 +114,14 @@ mod tests {
 
     #[test]
     fn full_config_deserializes_correctly() {
-        let config: DemiurgeConfig = serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
+        let config: DemiurgeConfig =
+            serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
         assert_eq!(config.system().hostname(), "testhost");
         assert_eq!(
-            config.packages().get("paru").expect("\"paru\" key exists in the config we just parsed"),
+            config
+                .packages()
+                .get("paru")
+                .expect("\"paru\" key exists in the config we just parsed"),
             vec!["vim".to_owned(), "git".to_owned()]
         );
         assert_eq!(config.dotfiles().dotfiles().len(), 1);
@@ -134,16 +138,20 @@ mod tests {
 
     #[test]
     fn config_round_trip_is_stable() {
-        let original: serde_json::Value = serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
-        let config: DemiurgeConfig = serde_json::from_value(original.clone()).expect("value was just parsed from valid JSON");
-        let serialized: serde_json::Value = serde_json::to_value(&config).expect("DemiurgeConfig is always serializable");
+        let original: serde_json::Value =
+            serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
+        let config: DemiurgeConfig = serde_json::from_value(original.clone())
+            .expect("value was just parsed from valid JSON");
+        let serialized: serde_json::Value =
+            serde_json::to_value(&config).expect("DemiurgeConfig is always serializable");
         assert_eq!(original, serialized);
     }
 
     #[test]
     fn empty_config_deserializes_to_defaults() {
         let json = r#"{"system": {"hostname": ""}, "packages": {}, "dotfiles": [], "services": [], "users": []}"#;
-        let config: DemiurgeConfig = serde_json::from_str(json).expect("literal is well-formed JSON");
+        let config: DemiurgeConfig =
+            serde_json::from_str(json).expect("literal is well-formed JSON");
         assert!(config.packages().package_managers().is_empty());
         assert!(config.dotfiles().dotfiles().is_empty());
         assert!(config.services().services().is_empty());
@@ -152,7 +160,8 @@ mod tests {
 
     #[test]
     fn validate_valid_config_is_ok() {
-        let config: DemiurgeConfig = serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
+        let config: DemiurgeConfig =
+            serde_json::from_str(FULL_CONFIG_JSON).expect("FULL_CONFIG_JSON is valid JSON");
         assert!(config.validate().is_ok());
     }
 
@@ -167,7 +176,8 @@ mod tests {
             "services": [""],
             "users": []
         }"#;
-        let config: DemiurgeConfig = serde_json::from_str(json).expect("literal is well-formed JSON");
+        let config: DemiurgeConfig =
+            serde_json::from_str(json).expect("literal is well-formed JSON");
         let err = config.validate().unwrap_err();
         let msg = err.to_string();
         assert!(

@@ -28,15 +28,18 @@ mod tests {
 
     #[test]
     fn tilde_prefix_expands_to_home() {
-        let result = path_tilde_expand("~/Documents/notes.txt".into()).expect("path is valid and home dir exists");
-        let home = directories::UserDirs::new().expect("test environment has a valid home directory");
+        let result = path_tilde_expand("~/Documents/notes.txt".into())
+            .expect("path is valid and home dir exists");
+        let home =
+            directories::UserDirs::new().expect("test environment has a valid home directory");
         assert_eq!(result, home.home_dir().join("Documents/notes.txt"));
     }
 
     #[test]
     fn tilde_alone_expands_to_home_dir() {
         let result = path_tilde_expand("~".into()).expect("path is valid and home dir exists");
-        let home = directories::UserDirs::new().expect("test environment has a valid home directory");
+        let home =
+            directories::UserDirs::new().expect("test environment has a valid home directory");
         assert_eq!(result, home.home_dir().to_path_buf());
     }
 

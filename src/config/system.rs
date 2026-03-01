@@ -91,7 +91,9 @@ mod tests {
         let system = System {
             hostname: "persistedhost".to_owned(),
         };
-        system.save_applied_config(dir.path()).expect("temp dir is writable");
+        system
+            .save_applied_config(dir.path())
+            .expect("temp dir is writable");
         let loaded = System::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(loaded.hostname(), "persistedhost");
     }

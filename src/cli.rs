@@ -55,8 +55,8 @@ impl Cli {
     }
 }
 
+#[cfg(test)]
 mod tests {
-
     #[test]
     fn apply_valid_flags() {
         use crate::cli::Cli;
@@ -99,7 +99,11 @@ mod tests {
         ];
         for input in invalid_inputs {
             let cli = Cli::try_parse_from(&input);
-            assert!(cli.is_err(), "Expected Err, got Ok: {:?}", cli.expect("called only when is_err() is false"));
+            assert!(
+                cli.is_err(),
+                "Expected Err, got Ok: {:?}",
+                cli.expect("called only when is_err() is false")
+            );
         }
     }
 

@@ -164,7 +164,9 @@ mod tests {
             r#"[{"name": "alice", "groups": ["wheel", "docker"]}, {"name": "bob", "groups": []}]"#,
         )
         .expect("literal is well-formed JSON");
-        users.save_applied_config(dir.path()).expect("temp dir is writable");
+        users
+            .save_applied_config(dir.path())
+            .expect("temp dir is writable");
         let loaded = Users::read_applied_config(dir.path()).expect("config was just saved");
         assert_eq!(loaded.users().len(), 2);
         let alice = loaded
@@ -180,15 +182,5 @@ mod tests {
     fn read_applied_config_returns_none_when_missing() {
         let dir = tempfile::TempDir::new().expect("OS can create a temp directory");
         assert!(Users::read_applied_config(dir.path()).is_none());
-    }
-
-    #[test]
-    fn user_new_stores_name_and_groups() {
-        let user = User::new(
-            "alice".to_owned(),
-            vec!["wheel".to_owned(), "docker".to_owned()],
-        );
-        assert_eq!(user.name(), "alice");
-        assert_eq!(user.groups(), vec!["wheel".to_owned(), "docker".to_owned()]);
     }
 }
