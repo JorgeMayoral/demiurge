@@ -102,4 +102,31 @@ mod tests {
             assert!(cli.is_err(), "Expected Err, got Ok: {:?}", cli.unwrap());
         }
     }
+
+    #[test]
+    fn init_valid_flags() {
+        use crate::cli::Cli;
+        use clap::Parser;
+        let valid_inputs = vec![
+            vec!["--", "init"],
+            vec!["--", "init", "--overwrite"],
+            vec!["--", "init", "--update-types"],
+        ];
+        for input in valid_inputs {
+            let cli = Cli::try_parse_from(&input);
+            assert!(cli.is_ok(), "Expected Ok, got Err:\n{}", cli.unwrap_err());
+        }
+    }
+
+    #[test]
+    fn init_overwrite_and_update_types_are_mutually_exclusive() {
+        use crate::cli::Cli;
+        use clap::Parser;
+        let cli = Cli::try_parse_from(["--", "init", "--overwrite", "--update-types"]);
+        assert!(
+            cli.is_err(),
+            "Expected Err for mutually exclusive flags, got Ok: {:?}",
+            cli.unwrap()
+        );
+    }
 }
