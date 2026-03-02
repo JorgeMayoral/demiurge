@@ -77,12 +77,43 @@ impl ApplyArgs {
                 .context("prompt for apply confirmation")?
             };
             if apply {
-                changes
-                    .apply(self.overwrite_symlink)
-                    .context("apply changes")?;
-                config
+                let outcome = changes.apply(self.overwrite_symlink);
+
+                let effective_config = DemiurgeConfig::new(
+                    if outcome.system.is_none() {
+                        config.system().clone()
+                    } else {
+                        applied_config.system().clone()
+                    },
+                    if outcome.packages.is_none() {
+                        config.packages().clone()
+                    } else {
+                        applied_config.packages().clone()
+                    },
+                    if outcome.dotfiles.is_none() {
+                        config.dotfiles().clone()
+                    } else {
+                        applied_config.dotfiles().clone()
+                    },
+                    if outcome.services.is_none() {
+                        config.services().clone()
+                    } else {
+                        applied_config.services().clone()
+                    },
+                    if outcome.users.is_none() {
+                        config.users().clone()
+                    } else {
+                        applied_config.users().clone()
+                    },
+                );
+                effective_config
                     .save_applied_config()
                     .context("save applied config")?;
+
+                if !outcome.is_success() {
+                    let n = outcome.errors().count();
+                    anyhow::bail!("{n} subsystem(s) could not be applied; see errors above");
+                }
             } else {
                 log::error!("Apply operation canceled. Exiting.");
                 std::process::exit(1);

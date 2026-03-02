@@ -16,6 +16,22 @@ pub struct DemiurgeConfig {
 }
 
 impl DemiurgeConfig {
+    pub fn new(
+        system: System,
+        packages: Packages,
+        dotfiles: Dotfiles,
+        services: Services,
+        users: Users,
+    ) -> Self {
+        Self {
+            system,
+            packages,
+            dotfiles,
+            services,
+            users,
+        }
+    }
+
     pub fn system(&self) -> &System {
         &self.system
     }

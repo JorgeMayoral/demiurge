@@ -1,17 +1,18 @@
 use std::fmt::Display;
 
-use anyhow::{Context, Result};
+use anyhow::Context;
 use owo_colors::OwoColorize;
 
 use crate::{
     changes::{
-        dotfile::DotfileChanges, package::PackageChanges, service::ServiceChanges,
-        system::SystemChanges, user::UsersChanges,
+        dotfile::DotfileChanges, outcome::ApplyOutcome, package::PackageChanges,
+        service::ServiceChanges, system::SystemChanges, user::UsersChanges,
     },
     config::DemiurgeConfig,
 };
 
 mod dotfile;
+mod outcome;
 mod package;
 mod service;
 mod system;
@@ -37,21 +38,69 @@ impl Changes {
         }
     }
 
-    pub fn apply(&self, overwrite_symlinks: bool) -> Result<()> {
+    pub fn apply(&self, overwrite_symlinks: bool) -> ApplyOutcome {
         log::info!("Applying system changes...");
-        self.system.apply().context("apply system changes")?;
-        log::info!("Applying package changes...");
-        self.package.apply().context("apply package changes")?;
-        log::info!("Applying dotfiles changes...");
-        self.dotfile
-            .apply(overwrite_symlinks)
-            .context("apply dotfile changes")?;
-        log::info!("Applying service changes...");
-        self.service.apply().context("apply service changes")?;
-        log::info!("Applying users changes...");
-        self.user.apply().context("apply user changes")?;
+        let system = self
+            .system
+            .apply()
+            .context("apply system changes")
+            .map_err(|e| {
+                log::error!("{e:?}");
+                e
+            })
+            .err();
 
-        Ok(())
+        log::info!("Applying package changes...");
+        let packages = self
+            .package
+            .apply()
+            .context("apply package changes")
+            .map_err(|e| {
+                log::error!("{e:?}");
+                e
+            })
+            .err();
+
+        log::info!("Applying dotfile changes...");
+        let dotfiles = self
+            .dotfile
+            .apply(overwrite_symlinks)
+            .context("apply dotfile changes")
+            .map_err(|e| {
+                log::error!("{e:?}");
+                e
+            })
+            .err();
+
+        log::info!("Applying service changes...");
+        let services = self
+            .service
+            .apply()
+            .context("apply service changes")
+            .map_err(|e| {
+                log::error!("{e:?}");
+                e
+            })
+            .err();
+
+        log::info!("Applying user changes...");
+        let users = self
+            .user
+            .apply()
+            .context("apply user changes")
+            .map_err(|e| {
+                log::error!("{e:?}");
+                e
+            })
+            .err();
+
+        ApplyOutcome {
+            system,
+            packages,
+            dotfiles,
+            services,
+            users,
+        }
     }
 }
 
