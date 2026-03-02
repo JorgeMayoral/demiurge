@@ -87,7 +87,7 @@ Demiurge compares the desired configuration against the previously applied state
 | `users`    | `usermod --append --groups`                     | `usermod --remove --groups`            |
 | `dotfiles` | Creates symlinks                                | Removes symlinks                       |
 
-After successfully applying, the new state is saved so future runs can compute diffs correctly.
+After applying, the result is saved per subsystem: subsystems that succeeded advance to the new state so future runs skip them; subsystems that failed retain their previous state so future runs will retry them. If any subsystem failed the command exits with an error after saving.
 
 ---
 
