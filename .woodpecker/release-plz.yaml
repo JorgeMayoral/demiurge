@@ -10,7 +10,7 @@ clone:
 
 steps:
   - name: release-plz
-    image: marcoieni/release-plz
+    image: marcoieni/release-plz:main
     environment:
       RELEASE_PLZ_TOKEN:
         from_secret: release_plz_token
