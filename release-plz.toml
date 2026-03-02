@@ -1,0 +1,3 @@
+[workspace]
+# This crate ships as a binary, not a library — skip crates.io publishing.
+publish = false

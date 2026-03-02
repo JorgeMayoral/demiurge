@@ -1,0 +1,34 @@
+when:
+  - event: tag
+
+steps:
+  - name: build
+    image: rust:1.93.1
+    commands:
+      - rustup default stable
+      - cargo build --release -j 4
+      - strip target/release/dmrg
+
+  - name: upload
+    image: alpine
+    environment:
+      CODEBERG_TOKEN:
+        from_secret: release_plz_token
+    commands:
+      - apk add --no-cache curl jq
+      - tar -czf dmrg-${CI_COMMIT_TAG}-x86_64-linux.tar.gz -C target/release dmrg
+      - |
+        RELEASE_ID=""
+        for i in $(seq 1 6); do
+          RELEASE_ID=$(curl -sf \
+            "https://codeberg.org/api/v1/repos/$CI_REPO/releases/tags/$CI_COMMIT_TAG" \
+            -H "Authorization: token $CODEBERG_TOKEN" | jq -r '.id // empty')
+          if [ -n "$RELEASE_ID" ]; then break; fi
+          echo "Waiting for release ($i/6)..."
+          sleep 10
+        done
+      - |
+        curl -X POST \
+          "https://codeberg.org/api/v1/repos/$CI_REPO/releases/$RELEASE_ID/assets" \
+          -H "Authorization: token $CODEBERG_TOKEN" \
+          -F "attachment=@dmrg-${CI_COMMIT_TAG}-x86_64-linux.tar.gz"
