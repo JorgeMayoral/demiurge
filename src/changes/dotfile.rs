@@ -3,7 +3,10 @@ use std::fmt::Display;
 use anyhow::{Context, Result};
 use owo_colors::OwoColorize;
 
-use crate::config::{Dotfile, Dotfiles};
+use crate::{
+    config::{Dotfile, Dotfiles},
+    utils,
+};
 
 #[derive(Debug, Clone)]
 pub struct DotfileChanges {
@@ -38,7 +41,7 @@ impl DotfileChanges {
 
     pub fn apply(&self, overwrite: bool) -> Result<()> {
         for dotfile in self.create.dotfiles() {
-            dotfile.create_symlink(overwrite).with_context(|| {
+            Self::create_symlink(&dotfile, overwrite).with_context(|| {
                 format!(
                     "create symlink for dotfile \"{}\"",
                     dotfile.source().display()
@@ -47,7 +50,7 @@ impl DotfileChanges {
         }
 
         for dotfile in self.remove.dotfiles() {
-            dotfile.remove_symlink().with_context(|| {
+            Self::remove_symlink(&dotfile).with_context(|| {
                 format!(
                     "remove symlink for dotfile \"{}\"",
                     dotfile.source().display()
@@ -56,6 +59,81 @@ impl DotfileChanges {
         }
 
         Ok(())
+    }
+
+    fn create_symlink(dotfile: &Dotfile, overwrite: bool) -> Result<()> {
+        let source_path = utils::path_tilde_expand(dotfile.source())
+            .context("expand source dotfile path")?
+            .canonicalize()
+            .context("canonicalize source dotfile path")?;
+        let target_path =
+            utils::path_tilde_expand(dotfile.target()).context("expand target dotfile path")?;
+        if !source_path.exists() {
+            let error_msg = format!(
+                "The source path \"{}\" doesn't exist.",
+                source_path.display()
+            );
+            log::error!("{error_msg}");
+            return Err(anyhow::anyhow!(error_msg));
+        }
+        for entry in walkdir::WalkDir::new(&source_path) {
+            let entry = entry.context("read directory entry")?;
+            let entry_path = entry.path();
+            if entry_path.is_dir() {
+                continue;
+            }
+            let relative_path = entry_path
+                .strip_prefix(&source_path)
+                .context("compute relative dotfile path")?;
+            let destination_path = target_path.join(relative_path);
+            if destination_path.exists() || destination_path.is_symlink() {
+                if !overwrite {
+                    let error_msg = format!(
+                        "The target path \"{}\" already exists or is a symlink",
+                        destination_path.display()
+                    );
+                    log::error!("{error_msg}");
+                    return Err(anyhow::anyhow!(error_msg));
+                }
+                log::warn!("Removing {}", destination_path.display());
+                if destination_path.is_dir() && !destination_path.is_symlink() {
+                    std::fs::remove_dir_all(&destination_path)
+                        .context("remove existing directory at symlink destination")?;
+                } else {
+                    std::fs::remove_file(&destination_path)
+                        .context("remove existing file at symlink destination")?;
+                }
+            }
+            if let Some(parent_dir) = destination_path.parent() {
+                std::fs::create_dir_all(parent_dir)
+                    .context("create parent directories for symlink target")?;
+            }
+            std::os::unix::fs::symlink(entry_path, &destination_path).with_context(|| {
+                format!(
+                    "create symlink from \"{}\" to \"{}\"",
+                    entry_path.display(),
+                    destination_path.display()
+                )
+            })?;
+            log::info!(
+                "Symlink created from \"{}\" to \"{}\"",
+                entry_path.display(),
+                destination_path.display()
+            );
+        }
+        Ok(())
+    }
+
+    fn remove_symlink(dotfile: &Dotfile) -> Result<()> {
+        let target_path = utils::path_tilde_expand(dotfile.target())
+            .context("expand target dotfile path for removal")?;
+        if !target_path.exists() && !target_path.is_symlink() {
+            return Ok(());
+        }
+        std::fs::remove_dir_all(target_path.clone()).context(format!(
+            "Couldn't remove target path \"{}\"",
+            target_path.display()
+        ))
     }
 }
 
@@ -112,7 +190,7 @@ mod tests {
     use std::path::PathBuf;
 
     use super::DotfileChanges;
-    use crate::config::Dotfiles;
+    use crate::config::{Dotfile, Dotfiles};
 
     fn dots(json: &str) -> Dotfiles {
         serde_json::from_str(json).expect("literal is well-formed JSON")
@@ -205,5 +283,102 @@ mod tests {
         let changes = DotfileChanges::new(&dots_config, &dots_config);
         assert!(changes.create.dotfiles().is_empty());
         assert!(changes.remove.dotfiles().is_empty());
+    }
+
+    fn make_dotfile(src: &std::path::Path, tgt: &std::path::Path) -> Dotfile {
+        serde_json::from_str(&format!(
+            r#"{{"source": "{}", "target": "{}"}}"#,
+            src.display(),
+            tgt.display()
+        ))
+        .expect("paths are valid JSON strings")
+    }
+
+    #[test]
+    fn create_symlink_links_single_file() {
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let src_file = src_dir.path().join("file.txt");
+        std::fs::write(&src_file, "hello").expect("temp dir is writable");
+
+        let dotfile = make_dotfile(src_dir.path(), tgt_dir.path());
+        DotfileChanges::create_symlink(&dotfile, false)
+            .expect("source exists and target dir is empty");
+
+        let link = tgt_dir.path().join("file.txt");
+        assert!(
+            link.is_symlink(),
+            "expected a symlink at {}",
+            link.display()
+        );
+        assert_eq!(
+            std::fs::read_to_string(&link).expect("file was just written"),
+            "hello"
+        );
+    }
+
+    #[test]
+    fn create_symlink_recurses_into_subdirectories() {
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        std::fs::create_dir(src_dir.path().join("sub")).expect("temp dir is writable");
+        std::fs::write(src_dir.path().join("root.txt"), "root").expect("temp dir is writable");
+        std::fs::write(src_dir.path().join("sub").join("nested.txt"), "nested")
+            .expect("temp dir is writable");
+
+        let dotfile = make_dotfile(src_dir.path(), tgt_dir.path());
+        DotfileChanges::create_symlink(&dotfile, false)
+            .expect("source exists and target dir is empty");
+
+        assert!(tgt_dir.path().join("root.txt").is_symlink());
+        assert!(tgt_dir.path().join("sub").join("nested.txt").is_symlink());
+    }
+
+    #[test]
+    fn create_symlink_with_overwrite_replaces_existing() {
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        std::fs::write(src_dir.path().join("file.txt"), "new content")
+            .expect("temp dir is writable");
+        std::fs::write(tgt_dir.path().join("file.txt"), "old content")
+            .expect("temp dir is writable");
+
+        let dotfile = make_dotfile(src_dir.path(), tgt_dir.path());
+        DotfileChanges::create_symlink(&dotfile, true)
+            .expect("source exists and target dir is empty");
+
+        let link = tgt_dir.path().join("file.txt");
+        assert!(link.is_symlink());
+        assert_eq!(
+            std::fs::read_to_string(&link).expect("file was just written"),
+            "new content"
+        );
+    }
+
+    #[test]
+    fn remove_symlink_deletes_link_and_leaves_source_intact() {
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let src_file = src_dir.path().join("file.txt");
+        std::fs::write(&src_file, "data").expect("temp dir is writable");
+
+        let dotfile = make_dotfile(src_dir.path(), tgt_dir.path());
+        DotfileChanges::create_symlink(&dotfile, false)
+            .expect("source exists and target dir is empty");
+        assert!(tgt_dir.path().join("file.txt").is_symlink());
+
+        let remove_dotfile = make_dotfile(src_dir.path(), &tgt_dir.path().join("file.txt"));
+        DotfileChanges::remove_symlink(&remove_dotfile).expect("target path is valid");
+
+        assert!(!tgt_dir.path().join("file.txt").exists());
+        assert!(src_file.exists(), "source file must survive removal");
+    }
+
+    #[test]
+    fn remove_symlink_is_no_op_when_target_is_absent() {
+        let src_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let tgt_dir = tempfile::TempDir::new().expect("OS can create a temp directory");
+        let dotfile = make_dotfile(src_dir.path(), &tgt_dir.path().join("nonexistent"));
+        DotfileChanges::remove_symlink(&dotfile).expect("target path is valid");
     }
 }

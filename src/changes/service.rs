@@ -38,17 +38,37 @@ impl ServiceChanges {
 
     pub fn apply(&self) -> Result<()> {
         for service in self.enable.services() {
-            service
-                .enable()
+            Self::enable(&service)
                 .with_context(|| format!("enable service {}", service.service()))?;
         }
 
         for service in self.disable.services() {
-            service
-                .disable()
+            Self::disable(&service)
                 .with_context(|| format!("disable service {}", service.service()))?;
         }
 
+        Ok(())
+    }
+
+    fn enable(service: &Service) -> Result<()> {
+        let service = service.service();
+        duct::cmd!("sudo", "systemctl", "start", &service)
+            .run()
+            .with_context(|| format!("start service {service}"))?;
+        duct::cmd!("sudo", "systemctl", "enable", &service)
+            .run()
+            .with_context(|| format!("enable service {service}"))?;
+        Ok(())
+    }
+
+    fn disable(service: &Service) -> Result<()> {
+        let service = service.service();
+        duct::cmd!("sudo", "systemctl", "stop", &service)
+            .run()
+            .with_context(|| format!("stop service {service}"))?;
+        duct::cmd!("sudo", "systemctl", "disable", &service)
+            .run()
+            .with_context(|| format!("disable service {service}"))?;
         Ok(())
     }
 }

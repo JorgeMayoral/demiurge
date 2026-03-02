@@ -51,28 +51,6 @@ impl Service {
     pub fn service(&self) -> String {
         self.0.clone()
     }
-
-    pub fn enable(&self) -> Result<()> {
-        let service = self.0.clone();
-        duct::cmd!("sudo", "systemctl", "start", &service)
-            .run()
-            .with_context(|| format!("start service {service}"))?;
-        duct::cmd!("sudo", "systemctl", "enable", &service)
-            .run()
-            .with_context(|| format!("enable service {service}"))?;
-        Ok(())
-    }
-
-    pub fn disable(&self) -> Result<()> {
-        let service = self.0.clone();
-        duct::cmd!("sudo", "systemctl", "stop", &service)
-            .run()
-            .with_context(|| format!("stop service {service}"))?;
-        duct::cmd!("sudo", "systemctl", "disable", &service)
-            .run()
-            .with_context(|| format!("disable service {service}"))?;
-        Ok(())
-    }
 }
 
 #[cfg(test)]
