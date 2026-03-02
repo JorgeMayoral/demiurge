@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 description = "Experimental declarative configuration for Arch Linux using Typescript"
 authors = ["Jorge Mayoral Álvarez <contact@yorch.dev>"]
+license = "MIT OR Apache-2.0"
+
 
 [[bin]]
 name = "dmrg"
