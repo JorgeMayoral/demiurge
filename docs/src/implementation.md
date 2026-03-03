@@ -26,7 +26,7 @@ The `index.d.ts` file that `dmrg init` writes to disk is embedded in the binary 
 
 Each domain has a `*Changes` struct that takes the new desired state alongside the last applied state and produces a delta (what to add and what to remove). Only the delta is applied. This keeps the operation idempotent: running `dmrg apply` twice in a row with the same config produces no changes on the second run.
 
-After a successful apply, the new state is serialized using [`bitcode`](https://crates.io/crates/bitcode) (a compact binary format) and stored in the XDG data directory, resolved via the [`directories`](https://crates.io/crates/directories) crate. This persisted state is what the next run diffs against.
+After applying, each subsystem that succeeded has its new state serialized using [`bitcode`](https://crates.io/crates/bitcode) (a compact binary format) and stored in the XDG data directory, resolved via the [`directories`](https://crates.io/crates/directories) crate. Subsystems that failed retain their previous persisted state so the next run will retry them. This per-subsystem granularity means a partial success (e.g., dotfiles applied but packages failed) still advances the succeeded parts, avoiding redundant re-application on the next run.
 
 ## External process orchestration
 
