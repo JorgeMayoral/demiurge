@@ -79,36 +79,42 @@ impl ApplyArgs {
             if apply {
                 let outcome = changes.apply(self.overwrite_symlink);
 
-                let effective_config = DemiurgeConfig::new(
-                    if outcome.system.is_none() {
-                        config.system().clone()
-                    } else {
-                        applied_config.system().clone()
-                    },
-                    if outcome.packages.is_none() {
-                        config.packages().clone()
-                    } else {
-                        applied_config.packages().clone()
-                    },
-                    if outcome.dotfiles.is_none() {
-                        config.dotfiles().clone()
-                    } else {
-                        applied_config.dotfiles().clone()
-                    },
-                    if outcome.services.is_none() {
-                        config.services().clone()
-                    } else {
-                        applied_config.services().clone()
-                    },
-                    if outcome.users.is_none() {
-                        config.users().clone()
-                    } else {
-                        applied_config.users().clone()
-                    },
-                );
-                effective_config
-                    .save_applied_config()
-                    .context("save applied config")?;
+                let data_dir = DemiurgeConfig::get_data_dir().context("resolve data directory")?;
+                if outcome.system.is_none() {
+                    config
+                        .system()
+                        .clone()
+                        .save_applied_config(&data_dir)
+                        .context("save applied system config")?;
+                }
+                if outcome.packages.is_none() {
+                    config
+                        .packages()
+                        .clone()
+                        .save_applied_config(&data_dir)
+                        .context("save applied packages config")?;
+                }
+                if outcome.dotfiles.is_none() {
+                    config
+                        .dotfiles()
+                        .clone()
+                        .save_applied_config(&data_dir)
+                        .context("save applied dotfiles config")?;
+                }
+                if outcome.services.is_none() {
+                    config
+                        .services()
+                        .clone()
+                        .save_applied_config(&data_dir)
+                        .context("save applied services config")?;
+                }
+                if outcome.users.is_none() {
+                    config
+                        .users()
+                        .clone()
+                        .save_applied_config(&data_dir)
+                        .context("save applied users config")?;
+                }
 
                 if !outcome.is_success() {
                     let n = outcome.errors().count();
