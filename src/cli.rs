@@ -2,12 +2,15 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
 
-use crate::cli::{apply::ApplyArgs, eval::EvalArgs, init::InitArgs, schema::SchemaArgs};
+use crate::cli::{
+    apply::ApplyArgs, eval::EvalArgs, init::InitArgs, schema::SchemaArgs, status::StatusArgs,
+};
 
 mod apply;
 mod eval;
 mod init;
 mod schema;
+mod status;
 
 #[derive(Debug, Parser, Clone)]
 #[command(version, about, author)]
@@ -28,6 +31,8 @@ pub enum Command {
     Init(InitArgs),
     /// Prints the JSON schema of the Demiurge configuration object
     Schema(SchemaArgs),
+    /// Show the currently applied configuration
+    Status(StatusArgs),
 }
 
 impl Cli {
@@ -44,6 +49,9 @@ impl Cli {
             }
             Command::Schema(args) => {
                 args.run()?;
+            }
+            Command::Status(_) => {
+                StatusArgs::run();
             }
         }
 
@@ -120,6 +128,14 @@ mod tests {
             let cli = Cli::try_parse_from(&input);
             assert!(cli.is_ok(), "Expected Ok, got Err:\n{}", cli.unwrap_err());
         }
+    }
+
+    #[test]
+    fn status_valid_flags() {
+        use crate::cli::Cli;
+        use clap::Parser;
+        let cli = Cli::try_parse_from(["--", "status"]);
+        assert!(cli.is_ok(), "Expected Ok, got Err:\n{}", cli.unwrap_err());
     }
 
     #[test]

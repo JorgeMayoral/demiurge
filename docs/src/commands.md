@@ -1,6 +1,6 @@
 # Commands
 
-The `dmrg` binary exposes four subcommands.
+The `dmrg` binary exposes five subcommands.
 
 ## `dmrg init`
 
@@ -119,6 +119,47 @@ dmrg eval --file ~/dotfiles/index.ts --yaml > config.yaml
 
 # Pipe directly into apply
 dmrg eval --file ~/dotfiles/index.ts --json | dmrg apply --stdin --from-json --name desktop
+```
+
+---
+
+## `dmrg status`
+
+Displays the configuration that was last successfully applied, reading the persisted state from the data directory.
+
+```sh
+dmrg status
+```
+
+No options are available for this command.
+
+**Example output:**
+
+```
+Applied Configuration
+─────────────────────
+
+System
+  Hostname: my-machine
+
+Packages
+  cargo: ripgrep
+  paru: git, vim
+
+Dotfiles
+  /home/alice/.dotfiles/nvim → /home/alice/.config/nvim
+
+Services
+  bluetooth, docker
+
+Users
+  alice: docker, wheel
+```
+
+If no configuration has been applied yet, the command prints an informational message and exits successfully:
+
+```
+No configuration has been applied yet.
 ```
 
 ---
