@@ -10,7 +10,7 @@
 Clone the repository and install with cargo:
 
 ```sh
-git clone https://github.com/yorch/demiurge
+git clone https://github.com/JorgeMayoral/demiurge
 cd demiurge
 cargo install --path .
 ```
