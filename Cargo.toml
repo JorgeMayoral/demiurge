@@ -14,7 +14,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1.0.100"
 bitcode = { version = "0.6.9", features = ["serde"] }
-clap = { version = "4.5.56", features = ["derive"] }
+clap = { version = "4.5.60", features = ["derive"] }
 clap-verbosity-flag = "3.0.4"
 colog = "1.4.0"
 directories = "6.0.0"
