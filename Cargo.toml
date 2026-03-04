@@ -21,7 +21,7 @@ directories = "6.0.0"
 duct = "1.1.1"
 inquire = "0.9.3"
 log = "0.4.29"
-owo-colors = "4.2.3"
+owo-colors = "4.3.0"
 rustyscript = { version = "0.12.3", features = ["fs_import"] }
 schemars = "1.2.1"
 serde = { version = "=1.0.219", features = ["derive"] }
