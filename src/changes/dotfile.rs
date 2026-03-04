@@ -123,6 +123,7 @@ impl DotfileChanges {
         if !target_path.exists() && !target_path.is_symlink() {
             return Ok(());
         }
+        log::info!("Removing symlink at \"{}\"", target_path.display());
         std::fs::remove_dir_all(&target_path).context(format!(
             "Couldn't remove target path \"{}\"",
             target_path.display()

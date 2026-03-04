@@ -52,9 +52,11 @@ impl ServiceChanges {
 
     fn enable(service: &Service) -> Result<()> {
         let service = service.service();
+        log::info!("Starting service {service}");
         duct::cmd!("sudo", "systemctl", "start", &service)
             .run()
             .with_context(|| format!("start service {service}"))?;
+        log::info!("Enabling service {service}");
         duct::cmd!("sudo", "systemctl", "enable", &service)
             .run()
             .with_context(|| format!("enable service {service}"))?;
@@ -63,9 +65,11 @@ impl ServiceChanges {
 
     fn disable(service: &Service) -> Result<()> {
         let service = service.service();
+        log::info!("Stopping service {service}");
         duct::cmd!("sudo", "systemctl", "stop", &service)
             .run()
             .with_context(|| format!("stop service {service}"))?;
+        log::info!("Disabling service {service}");
         duct::cmd!("sudo", "systemctl", "disable", &service)
             .run()
             .with_context(|| format!("disable service {service}"))?;

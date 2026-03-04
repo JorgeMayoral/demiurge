@@ -72,10 +72,20 @@ impl UserChanges {
 
     pub fn apply(&self) -> Result<()> {
         if !self.add_groups.groups().is_empty() {
+            log::info!(
+                "Adding user {} to groups: {}",
+                self.add_groups.name(),
+                self.add_groups.groups().join(", ")
+            );
             self.add_groups.add_groups().context("add user groups")?;
         }
 
         if !self.remove_groups.groups().is_empty() {
+            log::info!(
+                "Removing user {} from groups: {}",
+                self.remove_groups.name(),
+                self.remove_groups.groups().join(", ")
+            );
             self.remove_groups
                 .remove_groups()
                 .context("remove user groups")?;

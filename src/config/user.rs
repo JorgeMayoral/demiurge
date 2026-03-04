@@ -97,7 +97,10 @@ impl User {
             .map(ToString::to_string)
             .collect::<Vec<String>>();
         for group in groups {
-            if !existing_groups.contains(group) {
+            if existing_groups.contains(group) {
+                log::debug!("Group {group} already exists, skipping creation");
+            } else {
+                log::info!("Creating group {group}");
                 duct::cmd!("sudo", "groupadd", group)
                     .run()
                     .with_context(|| format!("create group {group}"))?;
