@@ -1,3 +1,5 @@
 [workspace]
 # This crate ships as a binary, not a library — skip crates.io publishing.
 publish = false
+git_release_draft = true
+git_only = true
