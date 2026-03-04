@@ -19,7 +19,7 @@ clap-verbosity-flag = "3.0.4"
 colog = "1.4.0"
 directories = "6.0.0"
 duct = "1.1.1"
-inquire = "0.9.3"
+inquire = "0.9.4"
 log = "0.4.29"
 owo-colors = "4.3.0"
 rustyscript = { version = "0.12.3", features = ["fs_import"] }
