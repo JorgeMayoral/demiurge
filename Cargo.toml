@@ -24,7 +24,7 @@ log = "0.4.29"
 owo-colors = "4.3.0"
 rustyscript = { version = "0.12.3", features = ["fs_import"] }
 schemars = "1.2.1"
-serde = { version = "=1.0.219", features = ["derive"] }
+serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.143"
 serde_norway = "0.9.42"
 
